@@ -23,10 +23,24 @@ public class StaffServiceController : IStaffService
 
     public async Task DeleteAsync(Guid id, CancellationToken token)
     {
-        var staff = await _context.Staff.FindAsync(new object[] { id }, token);
+        var staff = await _context.Staff.FirstOrDefaultAsync(staff => staff.Id == id, token);
         if (staff is null) return;
 
         _context.Staff.Remove(staff);
         await _context.SaveChangesAsync(token);
+    }
+
+    public async Task<StaffEntitiy?> UpdateAsync(Guid id, UpdateStaffBody request, CancellationToken token)
+    {
+        var staff = await _context.Staff.FirstOrDefaultAsync(staff => staff.Id == id, token);
+
+        if(staff is null) return null;
+
+        if(!string.IsNullOrWhiteSpace(request.FirstName)) staff.FirstName = request.FirstName;
+        if(!string.IsNullOrWhiteSpace(request.LastName)) staff.LastName = request.LastName;
+         staff.StaffRole = request.Role;
+
+         await _context.SaveChangesAsync(token);
+         return staff;
     }
 }

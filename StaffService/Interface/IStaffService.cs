@@ -5,5 +5,5 @@ public interface IStaffService
     Task<StaffEntitiy> CreateAsync(CreateStaffBody request, CancellationToken token);
     Task DeleteAsync(Guid id, CancellationToken token);
 
-    // Task<StaffEntitiy> UpdateAsync();
+    Task<StaffEntitiy?> UpdateAsync(Guid id, UpdateStaffBody request, CancellationToken token);
 }

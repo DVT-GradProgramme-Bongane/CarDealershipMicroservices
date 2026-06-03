@@ -1,0 +1,1 @@
+public record UpdateStaffBody(string FirstName, string LastName, Role Role, string Email, String Phone );

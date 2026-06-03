@@ -11,5 +11,5 @@ var app = builder.Build();
 app.MapGrpcService<GrpcStaffService>();
 
 
-
+app.MapStaffEndpoints();
 app.Run();

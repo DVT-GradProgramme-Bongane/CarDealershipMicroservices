@@ -1,10 +1,7 @@
 
-
-
-
 public static class StaffServiceEndpoint
 {
-    public static void MapStaffEndpoints(IEndpointRouteBuilder app)
+    public static void MapStaffEndpoints(this IEndpointRouteBuilder app)
     {
         var apiGroup = app.MapGroup("/api/staff");
 
@@ -32,15 +29,20 @@ public static class StaffServiceEndpoint
 
            var staff = await service.CreateAsync(request, token);
 
-           // Uncomment once RabbitMQ is wired up:
-           // await publisher.PublishAsync(new StaffCreatedEvent(staff.Id, staff.FullName), token);
-
            return Results.Created($"/api/staff/{staff.Id}", staff);
        });
 
-        apiGroup.MapPut("/{id}", (Guid id, Staff staff) =>
+        apiGroup.MapPut("/{id}", async (Guid id, IStaffService service, UpdateStaffBody request, CancellationToken token) =>
         {
+            if (string.IsNullOrEmpty(request.Email)) return Results.NoContent();
+            if (string.IsNullOrEmpty(request.FirstName)) return Results.NoContent();
+            if (string.IsNullOrEmpty(request.LastName)) return Results.NoContent();
+            if (string.IsNullOrEmpty(request.Phone)) return Results.NoContent();
+            if (string.IsNullOrEmpty(request.Role.ToString())) return Results.NoContent();
 
+            var staff = await service.UpdateAsync(id, request, token);
+
+            return Results.Ok(staff);
         });
 
         apiGroup.MapDelete("/{id}", async (Guid id, IStaffService service, CancellationToken token) =>
