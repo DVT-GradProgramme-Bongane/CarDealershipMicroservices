@@ -11,10 +11,15 @@ public class InventoryGrpcClient
 
     public async Task ReserveCarAsync(Guid carId)
     {
+        await UpdateCarStatusAsync(carId, "reserved");
+    }
+
+    public async Task UpdateCarStatusAsync(Guid carId, string status)
+    {
         await _client.UpdateCarStatusAsync(new global::UpdateStatusRequest
         {
             Id = carId.ToString(),
-            Status = "reserved"
+            Status = status
         });
     }
 }

@@ -17,27 +17,14 @@ public class EventBus
 
     public Task PublishAsync(string routingKey, object payload)
     {
-        var hostName = _configuration["RabbitMq:HostName"];
-        if (string.IsNullOrWhiteSpace(hostName))
+        using var connection = CreateConnection();
+        if (connection is null)
         {
-            _logger.LogWarning("RabbitMq host is not configured. Skipping event publish for {RoutingKey}.", routingKey);
+            _logger.LogWarning("RabbitMQ connection is not configured. Skipping event publish for {RoutingKey}.", routingKey);
             return Task.CompletedTask;
         }
 
-        var exchangeName = _configuration["RabbitMq:Exchange"] ?? "used-sales.events";
-        var userName = _configuration["RabbitMq:UserName"] ?? "guest";
-        var password = _configuration["RabbitMq:Password"] ?? "guest";
-        var port = int.TryParse(_configuration["RabbitMq:Port"], out var parsedPort) ? parsedPort : 5672;
-
-        var factory = new ConnectionFactory
-        {
-            HostName = hostName,
-            UserName = userName,
-            Password = password,
-            Port = port
-        };
-
-        using var connection = factory.CreateConnection();
+        var exchangeName = _configuration["RabbitMq:Exchange"] ?? "dealership";
         using var channel = connection.CreateModel();
 
         channel.ExchangeDeclare(
@@ -45,8 +32,14 @@ public class EventBus
             type: ExchangeType.Topic,
             durable: true,
             autoDelete: false);
+        var envelope = new
+        {
+            @event = routingKey,
+            timestamp = DateTime.UtcNow.ToString("o"),
+            data = payload
+        };
 
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(envelope));
         channel.BasicPublish(
             exchange: exchangeName,
             routingKey: routingKey,
@@ -54,5 +47,43 @@ public class EventBus
             body: body);
 
         return Task.CompletedTask;
+    }
+
+    private IConnection? CreateConnection()
+    {
+        try
+        {
+            var rabbitUrl = _configuration["RABBITMQ_URL"];
+            if (!string.IsNullOrWhiteSpace(rabbitUrl))
+            {
+                var urlFactory = new ConnectionFactory { Uri = new Uri(rabbitUrl) };
+                return urlFactory.CreateConnection();
+            }
+
+            var hostName = _configuration["RabbitMq:HostName"];
+            if (string.IsNullOrWhiteSpace(hostName))
+            {
+                return null;
+            }
+
+            var userName = _configuration["RabbitMq:UserName"] ?? "guest";
+            var password = _configuration["RabbitMq:Password"] ?? "guest";
+            var port = int.TryParse(_configuration["RabbitMq:Port"], out var parsedPort) ? parsedPort : 5672;
+
+            var factory = new ConnectionFactory
+            {
+                HostName = hostName,
+                UserName = userName,
+                Password = password,
+                Port = port
+            };
+
+            return factory.CreateConnection();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create RabbitMQ connection.");
+            return null;
+        }
     }
 }

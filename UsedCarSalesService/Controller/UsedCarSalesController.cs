@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using UsedCarSalesService.Contracts;
 using UsedCarSalesService.Services;
@@ -29,12 +30,19 @@ public class UsedSalesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateSaleRequest req)
     {
-        var id = await _service.CreateSale(req);
-        return CreatedAtAction(nameof(Get), new { id }, id);
+        try
+        {
+            var id = await _service.CreateSale(req);
+            return CreatedAtAction(nameof(Get), new { id }, id);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
+        }
     }
 
     [HttpPatch("{id:guid}/status")]
-    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest req)
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateSaleStatusRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.Status))
         {
@@ -48,6 +56,10 @@ public class UsedSalesController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
         }
     }
 }

@@ -18,15 +18,18 @@ public class UsedSalesService
     private readonly UsedCarSalesDbContext _db;
     private readonly InventoryGrpcClient _inventory;
     private readonly EventBus _eventBus;
+    private readonly ILogger<UsedSalesService> _logger;
 
     public UsedSalesService(
         UsedCarSalesDbContext db,
         InventoryGrpcClient inventory,
-        EventBus eventBus)
+        EventBus eventBus,
+        ILogger<UsedSalesService> logger)
     {
         _db = db;
         _inventory = inventory;
         _eventBus = eventBus;
+        _logger = logger;
     }
 
     public async Task<IReadOnlyList<UsedSalesTransaction>> GetAll()
@@ -55,10 +58,48 @@ public class UsedSalesService
         _db.Transactions.Add(sale);
         await _db.SaveChangesAsync();
 
-        await _inventory.ReserveCarAsync(req.CarId);
-        await _eventBus.PublishAsync("sale.used.created", sale);
+        var inventoryReserved = false;
+        try
+        {
+            await ExecuteWithRetryAsync(
+                () => _inventory.ReserveCarAsync(req.CarId),
+                "reserve inventory vehicle");
+            inventoryReserved = true;
 
-        return sale.Id;
+            await ExecuteWithRetryAsync(
+                () => _eventBus.PublishAsync("sale.used.created", new
+                {
+                    sale_id = sale.Id,
+                    car_id = sale.CarId,
+                    client_id = sale.ClientId
+                }),
+                "publish sale.used.created event");
+
+            return sale.Id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sale creation sync failed for sale {SaleId}; starting compensation.", sale.Id);
+
+            if (inventoryReserved)
+            {
+                try
+                {
+                    await ExecuteWithRetryAsync(
+                        () => _inventory.UpdateCarStatusAsync(req.CarId, "available"),
+                        "rollback reserved inventory vehicle");
+                }
+                catch (Exception rollbackEx)
+                {
+                    _logger.LogError(rollbackEx, "Inventory rollback failed for sale {SaleId}.", sale.Id);
+                }
+            }
+
+            _db.Transactions.Remove(sale);
+            await _db.SaveChangesAsync();
+
+            throw new InvalidOperationException("Could not complete sale creation due to downstream sync failure.", ex);
+        }
     }
 
     public async Task<UsedSalesTransaction?> UpdateStatus(Guid id, string status)
@@ -75,15 +116,120 @@ public class UsedSalesService
             throw new ArgumentException("Invalid sale status.", nameof(status));
         }
 
+        var previousStatus = sale.Status;
         sale.Status = normalizedStatus;
         await _db.SaveChangesAsync();
 
-        await _eventBus.PublishAsync("sale.used.status-updated", new
+        try
         {
-            sale.Id,
-            sale.Status
-        });
+            await SyncStatusSideEffectsAsync(sale, previousStatus, normalizedStatus);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Status sync failed for sale {SaleId}; reverting local status.", sale.Id);
+
+            sale.Status = previousStatus;
+            await _db.SaveChangesAsync();
+
+            var rollbackInventoryStatus = string.Equals(previousStatus, "cancelled", StringComparison.OrdinalIgnoreCase)
+                ? "available"
+                : "reserved";
+
+            try
+            {
+                await ExecuteWithRetryAsync(
+                    () => _inventory.UpdateCarStatusAsync(sale.CarId, rollbackInventoryStatus),
+                    "rollback inventory status");
+            }
+            catch (Exception rollbackEx)
+            {
+                _logger.LogError(rollbackEx, "Inventory status rollback failed for sale {SaleId}.", sale.Id);
+            }
+
+            throw new InvalidOperationException("Could not update sale status due to downstream sync failure.", ex);
+        }
 
         return sale;
+    }
+
+    private async Task SyncStatusSideEffectsAsync(UsedSalesTransaction sale, string previousStatus, string newStatus)
+    {
+        if (string.Equals(newStatus, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            await ExecuteWithRetryAsync(
+                () => _inventory.UpdateCarStatusAsync(sale.CarId, "sold"),
+                "mark inventory vehicle as sold");
+
+            await ExecuteWithRetryAsync(
+                () => _eventBus.PublishAsync("sale.used.completed", new
+                {
+                    sale_id = sale.Id,
+                    car_id = sale.CarId,
+                    client_id = sale.ClientId
+                }),
+                "publish sale.used.completed event");
+
+            return;
+        }
+
+        if (string.Equals(newStatus, "cancelled", StringComparison.OrdinalIgnoreCase))
+        {
+            await ExecuteWithRetryAsync(
+                () => _inventory.UpdateCarStatusAsync(sale.CarId, "available"),
+                "release inventory vehicle");
+
+            await ExecuteWithRetryAsync(
+                () => _eventBus.PublishAsync("sale.used.cancelled", new
+                {
+                    sale_id = sale.Id,
+                    car_id = sale.CarId,
+                    client_id = sale.ClientId
+                }),
+                "publish sale.used.cancelled event");
+
+            return;
+        }
+
+        await ExecuteWithRetryAsync(
+            () => _eventBus.PublishAsync("sale.used.status-updated", new
+            {
+                sale_id = sale.Id,
+                old_status = previousStatus,
+                new_status = sale.Status
+            }),
+            "publish sale.used.status-updated event");
+    }
+
+    private async Task ExecuteWithRetryAsync(Func<Task> action, string operationName, int maxAttempts = 3)
+    {
+        Exception? lastException = null;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await action();
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+                _logger.LogWarning(
+                    ex,
+                    "Attempt {Attempt}/{MaxAttempts} failed for operation: {OperationName}.",
+                    attempt,
+                    maxAttempts,
+                    operationName);
+
+                if (attempt < maxAttempts)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt));
+                }
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Operation '{operationName}' failed after {maxAttempts} attempts.",
+            lastException);
     }
 }
