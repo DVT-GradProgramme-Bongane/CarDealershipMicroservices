@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace InventoryService.Models;
+namespace Inventory.Api.Models;
 
 public enum CarType   { New, Used }
 public enum CarStatus { Available, Sold, Reserved, InService }

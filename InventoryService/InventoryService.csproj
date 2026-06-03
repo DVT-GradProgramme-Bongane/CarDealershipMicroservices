@@ -4,10 +4,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Inventory.Api</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos/inventory.proto" GrpcServices="Server" />
+    <Protobuf Include="../Shared/Protos/inventory.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>
