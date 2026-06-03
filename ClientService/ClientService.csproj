@@ -9,10 +9,14 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.80.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <Protobuf Include="..\Shared\Protos\*.proto" GrpcServices="Server" />
+    <Protobuf Include="..\..\Shared\Protos\*.proto"
+              GrpcServices="Server"
+              Link="Protos\%(Filename).proto"
+              Access="Public" />
   </ItemGroup>
 </Project>
