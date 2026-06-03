@@ -39,22 +39,14 @@ services:
   api-gateway:
     image: api-gateway
     build:
-      context: .
-      dockerfile: ApiGateway/Dockerfile
+      context: ./ApiGateway
     container_name: dealer_api_gateway
     ports:
       - "3000:3000"
     env_file: .env
     depends_on:
-      - inventory-service
-      - staff-service
-      - client-service
       - new-car-sales-service
-      - used-car-sales-service
-      - financing-service
       - accessories-suppliers-service
-      - maintenance-service
-      - notification-service
     networks:
       - dealer-network
 
