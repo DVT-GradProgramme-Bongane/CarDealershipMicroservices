@@ -13,6 +13,7 @@ builder.Services.AddSingleton(sp =>
     RabbitMqPublisher.CreateAsync(sp.GetRequiredService<IConfiguration>()).GetAwaiter().GetResult());
 
 builder.Services.AddControllers();
+builder.Services.AddGrpc();
 
 var app = builder.Build();
 
@@ -23,4 +24,5 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapControllers();
+app.MapGrpcService<InventoryGrpcService>();
 app.Run();
