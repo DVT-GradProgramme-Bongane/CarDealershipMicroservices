@@ -12,7 +12,11 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 builder.Services.AddSingleton(sp =>
     RabbitMqPublisher.CreateAsync(sp.GetRequiredService<IConfiguration>()).GetAwaiter().GetResult());
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+        opts.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter(
+                System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: false)));
 builder.Services.AddGrpc();
 
 var app = builder.Build();
