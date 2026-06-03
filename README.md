@@ -82,7 +82,7 @@ The Compose file expects each service in its own folder with a `Dockerfile` insi
 │   └── Dockerfile
 ├── NotificationService/
 │   └── Dockerfile
-└── proto/                # shared gRPC contracts (optional, see below)
+└── Shared/                # shared gRPC contracts (optional, see below)
 ```
 
 ## Setup
