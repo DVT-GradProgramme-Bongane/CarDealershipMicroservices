@@ -1,10 +1,10 @@
 
 
-using Microsoft.EntityFrameworkCore;
 
-public class StaffServiceEndpoint
+
+public static class StaffServiceEndpoint
 {
-    public void MapStaffEndpoints(IEndpointRouteBuilder app)
+    public static void MapStaffEndpoints(IEndpointRouteBuilder app)
     {
         var apiGroup = app.MapGroup("/api/staff");
 
