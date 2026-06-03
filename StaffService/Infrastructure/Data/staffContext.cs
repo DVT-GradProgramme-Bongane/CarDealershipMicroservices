@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 
-public class StaffContext :DbContext
+public class StaffDBContext :DbContext
 {
-    public StaffContext(DbContextOptions<StaffContext> options) : base(options)
+    public StaffDBContext(DbContextOptions<StaffDBContext> options) : base(options)
     {
     }
 
-    public DbSet<Staff> Staff => Set<Staff>();
+    public DbSet<StaffEntitiy> Staff => Set<StaffEntitiy>();
 
 }
