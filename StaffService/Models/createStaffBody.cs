@@ -1,0 +1,1 @@
+public record CreateStaffBody(string FirstName, string LastName, Role Role, string Email, String Phone );
