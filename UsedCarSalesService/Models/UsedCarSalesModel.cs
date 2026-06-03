@@ -1,6 +1,6 @@
 namespace UsedCarSalesService.Models;
 
-public class UsedCarSalesModel
+public class UsedSalesTransaction
 {
     public Guid Id { get; set; }
     public Guid CarId { get; set; }
