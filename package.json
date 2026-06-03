@@ -1,0 +1,17 @@
+{
+  "name": "car.dealership.microservices",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DVT-GradProgramme-Bongane/CarDealershipMicroservices.git"
+  },
+  "private": true,
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
