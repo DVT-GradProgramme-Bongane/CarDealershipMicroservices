@@ -3,7 +3,7 @@ namespace NewCarSalesService.Models;
 
 
 [Table("transactions", Schema = "new_sales")]
-public class Transactions
+public class NewSales
 {
     [Column("id")]
     public Guid Id { get; set; } = new Guid();
