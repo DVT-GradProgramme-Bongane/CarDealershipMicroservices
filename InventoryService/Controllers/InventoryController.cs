@@ -59,8 +59,7 @@ public class InventoryController : ControllerBase
         if (car is null) return NotFound();
         car.Status = dto.Status;
         await _db.SaveChangesAsync();
-        // Fire RabbitMQ event
-        _rabbit.Publish("car.status.updated", new {
+        await _rabbit.PublishAsync("car.status.updated", new {
             car_id = car.Id, status = car.Status
         });
         return Ok(car);
