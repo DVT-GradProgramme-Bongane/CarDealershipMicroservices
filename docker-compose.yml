@@ -1,0 +1,225 @@
+services:
+  rabbitmq-service:
+    image: rabbitmq:3-management
+    container_name: dealer_rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 50s
+    networks:
+      - dealer-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: dealer_postgres
+    environment:
+      POSTGRES_USER: dealer
+      POSTGRES_PASSWORD: dealer123
+      POSTGRES_DB: dealer_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U dealer -d dealer_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dealer-network
+
+  # Node
+  api-gateway:
+    image: api-gateway
+    build:
+      context: .
+      dockerfile: ApiGateway/Dockerfile
+    container_name: dealer_api_gateway
+    ports:
+      - "3000:3000"
+    env_file: .env
+    depends_on:
+      - inventory-service
+      - staff-service
+      - client-service
+      - new-car-sales-service
+      - used-car-sales-service
+      - financing-service
+      - accessories-suppliers-service
+      - maintenance-service
+      - notification-service
+    networks:
+      - dealer-network
+
+  # dotnet
+  inventory-service:
+    image: inventory-service
+    build:
+      context: .
+      dockerfile: InventoryService/Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_URLS=http://+:5001
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # node
+  staff-service:
+    image: staff-service
+    build:
+      context: .
+      dockerfile: StaffService/Dockerfile
+    ports:
+      - "5002:5002"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # node
+  client-service:
+    image: client-service
+    build:
+      context: .
+      dockerfile: ClientService/Dockerfile
+    ports:
+      - "5003:5003"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # dotnet
+  new-car-sales-service:
+    image: new-car-sales-service
+    build:
+      context: .
+      dockerfile: NewCarSalesService/Dockerfile
+    ports:
+      - "5004:5004"
+    environment:
+      - ASPNETCORE_URLS=http://+:5004
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # node
+  used-car-sales-service:
+    image: used-car-sales-service
+    build:
+      context: .
+      dockerfile: UsedCarSalesService/Dockerfile
+    ports:
+      - "5005:5005"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # dotnet
+  financing-service:
+    image: financing-service
+    build:
+      context: .
+      dockerfile: FinancingService/Dockerfile
+    ports:
+      - "5006:5006"
+    environment:
+      - ASPNETCORE_URLS=http://+:5006
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # node
+  accessories-suppliers-service:
+    image: accessories-suppliers-service
+    build:
+      context: .
+      dockerfile: AccessoriesSuppliersService/Dockerfile
+    ports:
+      - "5007:5007"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # dotnet
+  maintenance-service:
+    image: maintenance-service
+    build:
+      context: .
+      dockerfile: MaintenanceService/Dockerfile
+    ports:
+      - "5008:5008"
+    environment:
+      - ASPNETCORE_URLS=http://+:5008
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+  # node
+  notification-service:
+    image: notification-service
+    build:
+      context: .
+      dockerfile: NotificationService/Dockerfile
+    ports:
+      - "5009:5009"
+    env_file: .env
+    depends_on:
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
+
+networks:
+  dealer-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+// Inventory
+service InventoryService {
+  rpc GetCar (GetCarRequest) returns (CarResponse);
+  rpc UpdateCarStatus (UpdateStatusRequest) returns (StatusResponse);
+}
+
+message GetCarRequest { string id = 1; }
+message UpdateStatusRequest { string id = 1; string status = 2; }
+message CarResponse { string id = 1; string vin = 2; string make = 3; string model = 4; string status = 5; }
+message StatusResponse { bool success = 1; }
+
+// Staff
+service StaffService {
+  rpc GetStaff (GetStaffRequest) returns (StaffResponse);
+}
+message GetStaffRequest { string id = 1; }
+message StaffResponse { string id = 1; string first_name = 2; string last_name = 3; string role = 4; }
+
+// Client
+service ClientService {
+  rpc GetClient (GetClientRequest) returns (ClientResponse);
+}
+message GetClientRequest { string id = 1; }
+message ClientResponse { string id = 1; string first_name = 2; string last_name = 3; string email = 4; }
