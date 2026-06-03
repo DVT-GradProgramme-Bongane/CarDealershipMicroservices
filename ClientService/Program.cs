@@ -1,3 +1,4 @@
+using ClientService;
 using ClientService.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,9 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine(builder.Configuration["POSTGRES_HOST"]);
+
+var connectionString = EnvConfiguration.GetConnectionString(builder.Configuration);
 builder.Services.AddDbContext<ClientDbContext>(options =>
     options.UseNpgsql(connectionString));
 
