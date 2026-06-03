@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ClientService.Controller;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("clients")] 
 public class CustomerController : ControllerBase
 {
     private readonly ClientDbContext _context;
@@ -17,14 +17,14 @@ public class CustomerController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Customer>>> GetCustomer()
+    public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
     {
         var customers = await _context.Customers.OrderByDescending(c => c.CreatedAt).ToListAsync();
         return Ok(customers);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<Customer>> GetCustomer(Guid id)
+    public async Task<ActionResult<Customer>> GetCustomerById(Guid id)
     {
         var customer = await _context.Customers.FindAsync(id);
         if (customer == null)
@@ -49,7 +49,7 @@ public class CustomerController : ControllerBase
         _context.Customers.Add(customer);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
+        return CreatedAtAction(nameof(GetCustomers), new { id = customer.Id }, customer);
     }
 
     [HttpPut("{id:guid}")]

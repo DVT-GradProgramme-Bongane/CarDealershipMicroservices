@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClientService.Models;
 
-[Table("customers", Schema = "clients")]
+[Table("customers")]
 public class Customer
 {
     [Key]

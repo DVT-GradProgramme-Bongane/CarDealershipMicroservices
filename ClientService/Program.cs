@@ -11,8 +11,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-Console.WriteLine(builder.Configuration["POSTGRES_HOST"]);
+builder.Services.AddSwaggerGen();
 
 var connectionString = EnvConfiguration.GetConnectionString(builder.Configuration);
 builder.Services.AddDbContext<ClientDbContext>(options =>
@@ -20,28 +19,33 @@ builder.Services.AddDbContext<ClientDbContext>(options =>
 
 var app = builder.Build();
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
+    var retries = 5;
+
+    for (int i = 0; i < retries; i++)
     {
-        var dbContext = services.GetRequiredService<ClientDbContext>();
-        
-        dbContext.Database.EnsureCreated();
-        
-        Console.WriteLine("PostgreSQL 'clients' schema and 'customers' table are verified and ready.");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Database connection failed on early boot: {ex.Message}");
-        Console.WriteLine("Retrying schema validation in 5 seconds...");
-        Thread.Sleep(5000);
-        
-        var dbContext = services.GetRequiredService<ClientDbContext>();
-        dbContext.Database.EnsureCreated();
+        try
+        {
+            var dbContext = services.GetRequiredService<ClientDbContext>();
+            dbContext.Database.EnsureCreated();
+            Console.WriteLine("Database is ready.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DB not ready (attempt {i + 1}/{retries}): {ex.Message}");
+            if (i == retries - 1) throw;
+            Thread.Sleep(5000);
+        }
     }
 }
 
+app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 

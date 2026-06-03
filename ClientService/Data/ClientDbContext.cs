@@ -1,4 +1,3 @@
-using ClientService.Data;
 using ClientService.Models; 
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +13,7 @@ public class ClientDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("clients");
+        modelBuilder.HasDefaultSchema("customers");
 
         base.OnModelCreating(modelBuilder);
         
