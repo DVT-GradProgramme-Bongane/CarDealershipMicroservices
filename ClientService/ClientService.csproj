@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>ClientCustomerService</AssemblyName>
+    <RootNamespace>ClientCustomerService</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.80.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\Shared\Protos\inventory.proto" GrpcServices="Both" />
+  </ItemGroup>
+</Project>
