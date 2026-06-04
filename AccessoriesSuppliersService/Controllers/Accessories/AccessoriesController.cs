@@ -16,18 +16,19 @@ namespace AccessoriesSuppliersService.Features.Accessories;
 public sealed class AccessoriesController(AccessoriesDbContext db) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AccessoryItem>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<AccessoryItemDto>>> List(CancellationToken cancellationToken)
     {
         var accessories = await db.Items
             .AsNoTracking()
             .OrderBy(item => item.Name)
+            .Select(item => new AccessoryItemDto(item.Id, item.SupplierId, item.Name, item.Price, item.Stock))
             .ToListAsync(cancellationToken);
 
         return Ok(accessories);
     }
 
     [HttpPost]
-    public async Task<ActionResult<AccessoryItem>> Create(
+    public async Task<ActionResult<AccessoryItemDto>> Create(
         CreateAccessoryRequest request,
         CancellationToken cancellationToken)
     {
@@ -70,8 +71,10 @@ public sealed class AccessoriesController(AccessoriesDbContext db) : ControllerB
         db.Items.Add(item);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Created($"/accessories/{item.Id}", item);
+        var dto = new AccessoryItemDto(item.Id, item.SupplierId, item.Name, item.Price, item.Stock);
+        return Created($"/accessories/{item.Id}", dto);
     }
 }
 
 public sealed record CreateAccessoryRequest(Guid SupplierId, string Name, decimal Price, int Stock);
+public sealed record AccessoryItemDto(Guid Id, Guid SupplierId, string Name, decimal Price, int Stock);
