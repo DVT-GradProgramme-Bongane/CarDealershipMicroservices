@@ -6,7 +6,7 @@
 # dotenv files
 .env
 
-# Local development secrets — never commit credentials
+# Local dev secrets — never commit
 appsettings.Development.json
 
 # User-specific files

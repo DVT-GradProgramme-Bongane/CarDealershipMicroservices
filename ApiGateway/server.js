@@ -18,6 +18,10 @@ const routes = {
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 for (const [name, target] of Object.entries(routes)) {
+    if (!target) {
+        console.warn(`Skipping /api/${name}: no target URL configured`);
+        continue;
+    }
     app.use(
         `/api/${name}`,
         createProxyMiddleware({
