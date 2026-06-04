@@ -51,6 +51,7 @@ services:
       - used-car-sales-service
       - staff-service
       - client-service
+      - notification-service
     networks:
       - dealer-network
 
