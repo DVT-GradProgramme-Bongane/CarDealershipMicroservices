@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using CarDealerShipMicroService.NotificationService.Data;
+using CarDealerShipMicroService.NotificationService.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHostedService<RabbitMqConsumer>();
 
 var host = builder.Configuration["POSTGRES_HOST"]
            ?? throw new InvalidOperationException("POSTGRES_HOST is not configured.");
