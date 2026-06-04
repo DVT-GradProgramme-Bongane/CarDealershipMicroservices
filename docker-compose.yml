@@ -35,6 +35,7 @@ services:
     networks:
       - dealer-network
 
+  # Node
   api-gateway:
     image: api-gateway
     build:
@@ -46,6 +47,8 @@ services:
     depends_on:
       - new-car-sales-service
       - accessories-suppliers-service
+      - inventory-service
+      - used-car-sales-service
     networks:
       - dealer-network
 
@@ -211,6 +214,8 @@ services:
       - ASPNETCORE_URLS=http://+:5009
     depends_on:
       rabbitmq-service:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     networks:
       - dealer-network
