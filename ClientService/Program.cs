@@ -1,5 +1,5 @@
-using ClientService;
-using ClientService.Data;
+using ClientServices;
+using ClientServices.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

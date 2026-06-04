@@ -1,8 +1,7 @@
-using ClientService.Models; 
+using ClientServices.Models; 
 using Microsoft.EntityFrameworkCore;
 
-namespace ClientService.Data;
-
+namespace ClientServices.Data;
 public class ClientDbContext : DbContext
 {
     public ClientDbContext(DbContextOptions<ClientDbContext> options) : base(options)

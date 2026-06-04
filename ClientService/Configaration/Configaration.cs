@@ -1,4 +1,4 @@
-namespace ClientService;
+namespace ClientServices;
 
 public static class EnvConfiguration
 {

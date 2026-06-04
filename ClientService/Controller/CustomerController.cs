@@ -1,9 +1,9 @@
-using ClientService.Data;
-using ClientService.Models;
+using ClientServices.Data;
+using ClientServices.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClientService.Controller;
+namespace ClientServices.Controller;
 
 [ApiController]
 [Route("clients")] 
