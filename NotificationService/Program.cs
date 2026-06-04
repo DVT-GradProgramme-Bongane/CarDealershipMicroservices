@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using CarDealerShipMicroService.NotificationService.Data;
+using CarDealerShipMicroService.NotificationService.Endpoints;
 using CarDealerShipMicroService.NotificationService.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,5 +34,7 @@ using (var scope = app.Services.CreateScope())
     var db_context = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
     db_context.Database.EnsureCreated();
 }
+
+app.MapNotificationEndpoints();
 
 app.Run();
