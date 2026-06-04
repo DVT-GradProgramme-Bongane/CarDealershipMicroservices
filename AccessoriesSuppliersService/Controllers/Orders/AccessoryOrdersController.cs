@@ -17,7 +17,7 @@ namespace AccessoriesSuppliersService.Features.Orders;
 public sealed class AccessoryOrdersController(AccessoriesDbContext db, IRabbitMqPublisher publisher) : ControllerBase
 {
     [HttpPost("order")]
-    public async Task<ActionResult<AccessoryOrder>> Place(
+    public async Task<ActionResult<AccessoryOrderDto>> Place(
         PlaceAccessoryOrderRequest request,
         CancellationToken cancellationToken)
     {
@@ -79,15 +79,17 @@ public sealed class AccessoryOrdersController(AccessoriesDbContext db, IRabbitMq
             }, cancellationToken);
         }
 
-        return Created($"/accessories/orders/{order.Id}", order);
+        var dto = new AccessoryOrderDto(order.Id, order.ItemId, order.Quantity, order.Status, order.CreatedAt);
+        return Created($"/accessories/orders/{order.Id}", dto);
     }
 
     [HttpGet("orders")]
-    public async Task<ActionResult<IReadOnlyList<AccessoryOrder>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<AccessoryOrderDto>>> List(CancellationToken cancellationToken)
     {
         var orders = await db.Orders
             .AsNoTracking()
             .OrderByDescending(order => order.CreatedAt)
+            .Select(order => new AccessoryOrderDto(order.Id, order.ItemId, order.Quantity, order.Status, order.CreatedAt))
             .ToListAsync(cancellationToken);
 
         return Ok(orders);
@@ -95,3 +97,4 @@ public sealed class AccessoryOrdersController(AccessoriesDbContext db, IRabbitMq
 }
 
 public sealed record PlaceAccessoryOrderRequest(Guid ItemId, int Quantity);
+public sealed record AccessoryOrderDto(Guid Id, Guid ItemId, int Quantity, string Status, DateTime CreatedAt);

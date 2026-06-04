@@ -16,18 +16,19 @@ namespace AccessoriesSuppliersService.Features.Suppliers;
 public sealed class SuppliersController(AccessoriesDbContext db) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<Supplier>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<SupplierDto>>> List(CancellationToken cancellationToken)
     {
         var suppliers = await db.Suppliers
             .AsNoTracking()
             .OrderBy(supplier => supplier.Name)
+            .Select(supplier => new SupplierDto(supplier.Id, supplier.Name, supplier.Contact, supplier.Email))
             .ToListAsync(cancellationToken);
 
         return Ok(suppliers);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Supplier>> Create(
+    public async Task<ActionResult<SupplierDto>> Create(
         CreateSupplierRequest request,
         CancellationToken cancellationToken)
     {
@@ -47,8 +48,10 @@ public sealed class SuppliersController(AccessoriesDbContext db) : ControllerBas
         db.Suppliers.Add(supplier);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Created($"/suppliers/{supplier.Id}", supplier);
+        var dto = new SupplierDto(supplier.Id, supplier.Name, supplier.Contact, supplier.Email);
+        return Created($"/suppliers/{supplier.Id}", dto);
     }
 }
 
 public sealed record CreateSupplierRequest(string Name, string Contact, string Email);
+public sealed record SupplierDto(Guid Id, string Name, string Contact, string Email);

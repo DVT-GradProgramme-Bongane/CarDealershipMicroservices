@@ -13,6 +13,8 @@ namespace AccessoriesSuppliersService.Messaging;
 public sealed class RabbitMqPublisher(IConfiguration configuration, ILogger<RabbitMqPublisher> logger)
     : IRabbitMqPublisher, IAsyncDisposable
 {
+    private const string ExchangeName = "dealership";
+
     private readonly SemaphoreSlim _lock = new(1, 1);
     private IConnection? _connection;
     private IChannel? _channel;
@@ -20,7 +22,9 @@ public sealed class RabbitMqPublisher(IConfiguration configuration, ILogger<Rabb
     public async Task PublishAsync(string routingKey, object message, CancellationToken cancellationToken)
     {
         var channel = await GetChannelAsync(cancellationToken);
+        await channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Topic, true, false, null, false, cancellationToken);
         await channel.QueueDeclareAsync(routingKey, true, false, false, null, false, cancellationToken);
+        await channel.QueueBindAsync(routingKey, ExchangeName, routingKey, null, false, cancellationToken);
 
         var body = JsonSerializer.SerializeToUtf8Bytes(message);
         var properties = new BasicProperties
@@ -29,7 +33,7 @@ public sealed class RabbitMqPublisher(IConfiguration configuration, ILogger<Rabb
             Persistent = true
         };
 
-        await channel.BasicPublishAsync(string.Empty, routingKey, false, properties, body, cancellationToken);
+        await channel.BasicPublishAsync(ExchangeName, routingKey, false, properties, body, cancellationToken);
         logger.LogInformation("Published RabbitMQ message {RoutingKey}", routingKey);
     }
 
@@ -48,7 +52,12 @@ public sealed class RabbitMqPublisher(IConfiguration configuration, ILogger<Rabb
                 return _channel;
             }
 
-            var rabbitMqUrl = configuration["RABBITMQ_URL"] ?? "";
+            var rabbitMqUrl = configuration["RABBITMQ_URL"];
+            if (string.IsNullOrWhiteSpace(rabbitMqUrl))
+            {
+                throw new InvalidOperationException("RABBITMQ_URL is not configured.");
+            }
+
             var factory = new ConnectionFactory
             {
                 Uri = new Uri(rabbitMqUrl),
