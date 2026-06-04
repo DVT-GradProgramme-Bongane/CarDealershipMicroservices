@@ -10,12 +10,14 @@ public class StaffEntitiy
 
     public DateTime CreatedAt {get; set; } 
 
-    public StaffEntitiy(string firstName, string lastName, Role role, string email, string phone)
+    // EF core needs need this default constructir??
+    private StaffEntitiy() {}
+    public StaffEntitiy(string firstName, string lastName, Role staffRole, string email, string phone)
     {
-        Id = new Guid();
+        Id = Guid.NewGuid();
         FirstName = firstName;
         LastName = lastName;
-        StaffRole = role;
+        StaffRole = staffRole;
         Email = email;
         Phone = phone;
         CreatedAt = DateTime.UtcNow; // utc vs normal DateNow

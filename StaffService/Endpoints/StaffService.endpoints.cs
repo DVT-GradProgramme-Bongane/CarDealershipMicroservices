@@ -3,7 +3,7 @@ public static class StaffServiceEndpoint
 {
     public static void MapStaffEndpoints(this IEndpointRouteBuilder app)
     {
-        var apiGroup = app.MapGroup("/staff");
+        var apiGroup = app.MapGroup("/");
 
         apiGroup.MapGet("/", async (IStaffService service, CancellationToken token) =>
         {
