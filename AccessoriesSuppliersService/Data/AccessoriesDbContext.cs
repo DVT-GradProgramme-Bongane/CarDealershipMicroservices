@@ -45,7 +45,7 @@ public sealed class AccessoriesDbContext(DbContextOptions<AccessoriesDbContext> 
             entity.Property(order => order.ItemId).HasColumnName("item_id").IsRequired();
             entity.Property(order => order.Quantity).HasColumnName("quantity").IsRequired();
             entity.Property(order => order.Status).HasColumnName("status").IsRequired();
-            entity.Property(order => order.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp").IsRequired();
+            entity.Property(order => order.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone").IsRequired();
             entity.HasOne(order => order.Item)
                 .WithMany(item => item.Orders)
                 .HasForeignKey(order => order.ItemId);
