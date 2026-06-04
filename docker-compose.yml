@@ -35,7 +35,6 @@ services:
     networks:
       - dealer-network
 
-  # Node
   api-gateway:
     image: api-gateway
     build:
@@ -50,7 +49,6 @@ services:
     networks:
       - dealer-network
 
-  # dotnet
   inventory-service:
     image: inventory-service
     build:
@@ -69,7 +67,6 @@ services:
     networks:
       - dealer-network
 
-  # node
   staff-service:
     image: staff-service
     build:
@@ -78,6 +75,8 @@ services:
     ports:
       - "5002:5002"
     env_file: .env
+    environment:
+      - ASPNETCORE_URLS=http://+:5002
     depends_on:
       postgres:
         condition: service_healthy
@@ -86,7 +85,6 @@ services:
     networks:
       - dealer-network
 
-  # node
   client-service:
     image: client-service
     build:
@@ -94,6 +92,8 @@ services:
       dockerfile: ClientService/Dockerfile
     ports:
       - "5003:5003"
+    environment:
+      - ASPNETCORE_URLS=http://+:5003
     env_file: .env
     depends_on:
       postgres:
@@ -131,6 +131,8 @@ services:
     ports:
       - "5005:5005"
     env_file: .env
+    environment:
+      - ASPNETCORE_URLS=http://+:5005
     depends_on:
       postgres:
         condition: service_healthy
@@ -166,6 +168,8 @@ services:
       dockerfile: AccessoriesSuppliersService/Dockerfile
     ports:
       - "5007:5007"
+    environment:
+      - ASPNETCORE_URLS=http://+:5007
     env_file: .env
     depends_on:
       postgres:
@@ -203,6 +207,8 @@ services:
     ports:
       - "5009:5009"
     env_file: .env
+    environment:
+      - ASPNETCORE_URLS=http://+:5009
     depends_on:
       rabbitmq-service:
         condition: service_healthy
