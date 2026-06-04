@@ -55,16 +55,18 @@ public class UsedSalesService
             CreatedAt = DateTime.UtcNow
         };
 
-        _db.Transactions.Add(sale);
-        await _db.SaveChangesAsync();
-
         var inventoryReserved = false;
+        // Used to check if sale was actually written to database
+        var salePersisted = false;
         try
         {
             await ExecuteWithRetryAsync(
                 () => _inventory.ReserveCarAsync(req.CarId),
                 "reserve inventory vehicle");
             inventoryReserved = true;
+            _db.Transactions.Add(sale);
+            await _db.SaveChangesAsync();
+            salePersisted = true;
 
             await ExecuteWithRetryAsync(
                 () => _eventBus.PublishAsync("sale.used.created", new
@@ -80,7 +82,19 @@ public class UsedSalesService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Sale creation sync failed for sale {SaleId}; starting compensation.", sale.Id);
-
+            if (salePersisted)
+            if (inventoryReserved)
+            {
+                try
+                {
+                    _db.Transactions.Remove(sale);
+                    await _db.SaveChangesAsync();
+                }
+                catch (Exception dbRollbackEx)
+                {
+                    _logger.LogError(dbRollbackEx, "Sale rollback failed for sale {SaleId}.", sale.Id);
+                }
+            }
             if (inventoryReserved)
             {
                 try
@@ -89,14 +103,11 @@ public class UsedSalesService
                         () => _inventory.UpdateCarStatusAsync(req.CarId, "available"),
                         "rollback reserved inventory vehicle");
                 }
-                catch (Exception rollbackEx)
+                catch (Exception inventoryRollbackEx)
                 {
-                    _logger.LogError(rollbackEx, "Inventory rollback failed for sale {SaleId}.", sale.Id);
+                    _logger.LogError(inventoryRollbackEx, "Inventory rollback failed for sale {SaleId}.", sale.Id);
                 }
             }
-
-            _db.Transactions.Remove(sale);
-            await _db.SaveChangesAsync();
 
             throw new InvalidOperationException("Could not complete sale creation due to downstream sync failure.", ex);
         }
