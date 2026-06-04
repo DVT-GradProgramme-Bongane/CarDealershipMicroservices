@@ -83,7 +83,6 @@ public class UsedSalesService
         {
             _logger.LogError(ex, "Sale creation sync failed for sale {SaleId}; starting compensation.", sale.Id);
             if (salePersisted)
-            if (inventoryReserved)
             {
                 try
                 {
