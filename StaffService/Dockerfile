@@ -2,20 +2,26 @@
 USER $APP_UID
 WORKDIR /app
 EXPOSE 5002
-EXPOSE 5002
+EXPOSE 5003
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+COPY ["Shared/Protos/", "Shared/Protos/"]
 COPY ["StaffService/StaffService.csproj", "StaffService/"]
 RUN dotnet restore "StaffService/StaffService.csproj"
-COPY . .
+
+COPY ["StaffService/", "StaffService/"]
+
 WORKDIR "/src/StaffService"
-RUN dotnet build "./StaffService.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "StaffService.csproj" -c $BUILD_CONFIGURATION -o /app/build --no-restore
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./StaffService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "StaffService.csproj" -c $BUILD_CONFIGURATION -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

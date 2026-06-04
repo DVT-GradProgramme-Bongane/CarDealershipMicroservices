@@ -11,8 +11,7 @@ public class GrpcStaffService : StaffService.StaffServiceBase
         _db = db;
     }
 
-    public override async Task<StaffResponse> GetStaff(
-        GetStaffRequest request, ServerCallContext context)
+    public override async Task<StaffResponse> GetStaff(GetStaffRequest request, ServerCallContext context)
     {
         var staff = await _db.Staff.FirstOrDefaultAsync(s => s.Id.ToString() == request.Id);
 
