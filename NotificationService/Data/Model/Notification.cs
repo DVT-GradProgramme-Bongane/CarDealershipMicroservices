@@ -11,7 +11,7 @@ public class Notification
     [Column("event_type")]
     public string EventType { get; set; } = string.Empty;
 
-    [Column("payload")]
+    [Column("payload", TypeName = "jsonb")]
     public string Payload { get; set; } = string.Empty;
 
     [Column("created_at")]
