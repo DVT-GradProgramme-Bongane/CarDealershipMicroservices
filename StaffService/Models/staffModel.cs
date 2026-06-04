@@ -1,0 +1,1 @@
+public record Staff(Guid Id, string FirstName, string LastName, Role Role, string Email, string Phone, DateTime CreatedAt);

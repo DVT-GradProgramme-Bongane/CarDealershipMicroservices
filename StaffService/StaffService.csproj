@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+      <RootNamespace>CarDealership.StaffService</RootNamespace>
+  </PropertyGroup>
+
+<ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.66.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.66.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+  </ItemGroup>
+
+ <ItemGroup>
+    <Protobuf Include="..\Shared\Protos\inventory.proto" GrpcServices="Server" />
+  <!-- It tells the gRPC code generator exactly which C# classes to "scaffold" from your .proto file. -->
+  <!-- This allows your project to pick out StaffService.StaffServiceBase and implement it cleanly, while ignoring the generated base classes for the other services (like InventoryBase) until you need them. -->
+  <!-- SERVER : Use this in the Service that actually owns the data. This service overrides the base class to implement the actual business logic. -->
+  <!-- Generates only the Base class -->
+  </ItemGroup>
+
+
+ <ItemGroup>
+   <Content Include="..\.dockerignore">
+     <Link>.dockerignore</Link>
+   </Content>
+ </ItemGroup>
+</Project>
