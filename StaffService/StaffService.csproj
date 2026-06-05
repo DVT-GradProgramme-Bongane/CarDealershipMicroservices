@@ -27,7 +27,7 @@
   </ItemGroup>
 
  <ItemGroup>
-    <Protobuf Include="..\Shared\Protos\inventory.proto" GrpcServices="Server" />
+    <Protobuf Include="..\Shared\Protos\inventory.proto" GrpcServices="Both" />
   <!-- It tells the gRPC code generator exactly which C# classes to "scaffold" from your .proto file. -->
   <!-- This allows your project to pick out StaffService.StaffServiceBase and implement it cleanly, while ignoring the generated base classes for the other services (like InventoryBase) until you need them. -->
   <!-- SERVER : Use this in the Service that actually owns the data. This service overrides the base class to implement the actual business logic. -->
@@ -40,4 +40,12 @@
      <Link>.dockerignore</Link>
    </Content>
  </ItemGroup>
+
+ <ItemGroup>
+   <Compile Remove="StaffService.Tests/**" />
+   <Content Remove="StaffService.Tests/**" />
+   <EmbeddedResource Remove="StaffService.Tests/**" />
+   <None Remove="StaffService.Tests/**" />
+ </ItemGroup>
+
 </Project>

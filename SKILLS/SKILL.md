@@ -1,208 +1,303 @@
-# SKILL: Microservice Test & CI Setup
+# SKILL: Per-Service Test Scaffold & CI Pipeline
 
 ## Purpose
-This skill tells the agent how to scaffold a complete test suite and GitHub Actions
-CI pipeline for a .NET microservice in the CarDealershipMicroservices monorepo.
-Apply this skill once per service. Running it on `StaffService` produces
-`StaffService.Tests/`. Running it on `ClientService` produces `ClientService.Tests/`.
+This skill tells the agent how to scaffold or **append to** an existing test suite
+and generate a GitHub Actions CI workflow for a single .NET microservice in the
+CarDealershipMicroservices monorepo.
+
+The agent is always invoked for ONE service at a time. It never touches other
+services. It never generates for the entire system.
 
 ---
 
-## Repo layout assumptions
-Before doing anything, the agent MUST read the actual folder structure:
+## Critical rules before anything else
 
+1. **Read before write** — every placeholder must be resolved from actual files
+2. **Never write credentials** — no passwords, connection string passwords, or
+   secret values in any generated file. Use environment variable references only
+3. **Never create a git branch** — work against the current branch as-is
+4. **Append, don't overwrite** — if a test file already exists for this service,
+   add new tests to it. Never delete or regenerate an existing test file
+5. **All .NET — no Node.js** — this skill only applies to .NET service projects
+6. **Security check** — before writing any file, verify it contains no raw
+   credentials. If a read step surfaces a password from `.env`, use only the
+   key name (e.g. `${DB_PASSWORD}`) in output, never the value
+
+---
+
+## Step 0 — Orient from the README
+
+Read `README.md` at the solution root first. Extract:
+- What this service is responsible for in the dealership domain
+- Which other services it depends on or is called by
+- Any architectural notes relevant to testing (e.g. event-driven flows)
+
+This context shapes what the tests are actually asserting — a staff service test
+should assert staff domain behaviour, not generic CRUD.
+
+---
+
+## Critical path rule — test folder location
+
+The test project lives at:
 ```
-<SolutionRoot>/
-├── docker-compose.yml          ← shared infra, used by integration tests
-├── .env                        ← connection strings and secrets
-├── Shared/
-│   └── Protos/                 ← .proto files shared across services
-├── <ServiceName>/              ← the target service being tested
-│   ├── <ServiceName>.csproj
-│   ├── Dockerfile
-│   ├── Program.cs
-│   ├── Migrations/
-│   └── ...
-└── <ServiceName>.Tests/        ← agent creates this
+<ServiceName>/<ServiceName>.Tests/
 ```
 
-The agent must inspect the target service's `.csproj`, `Program.cs`, and folder
-structure before generating any file. It must not assume what packages,
-namespaces, or patterns are used — it reads them first.
+NOT at `<SolutionRoot>/<ServiceName>.Tests/`. Every `dotnet new`, `dotnet add`,
+file write, and `ProjectReference` must use the path inside the service folder.
+Verify the target path before creating any file or running any command.
 
 ---
 
-## Step 0 — Read before writing
+## Step 1 — Read the service (required, no skipping)
 
-Run these reads in order before touching any file:
+Run these reads in order:
 
-1. Read `<ServiceName>/<ServiceName>.csproj` — get TargetFramework, package versions, namespace
-2. Read `<ServiceName>/Program.cs` — get registered services, DbContext name, gRPC services, endpoint registrations
-3. List `<ServiceName>/` — identify: entity classes, service interfaces, endpoint files, gRPC impl files
-4. Read `docker-compose.yml` — get postgres and rabbitmq service names, ports, credentials
-5. Read `.env` — get connection string patterns
+1. `<ServiceName>/<ServiceName>.csproj`
+   - Extract: `TargetFramework`, package versions, `RootNamespace` if set
+   - Derive the .NET SDK version for the CI workflow (e.g. `net10.0` → `10.0.x`)
 
-Only after all five reads does the agent begin generating files.
+2. `<ServiceName>/Program.cs`
+   - Extract: DbContext registration name, registered service interfaces,
+     gRPC service registrations, endpoint map calls
+   - Note: does it call `MigrateAsync()` or `EnsureCreatedAsync()`?
+
+3. List `<ServiceName>/` folder
+   - Find: entity classes, service interface + implementation, gRPC impl file,
+     endpoint extension files, Migrations/ folder (empty or populated?)
+
+4. `docker-compose.yml` at solution root
+   - Extract: postgres service name, port mapping, RabbitMQ service name, port
+   - **Do not extract or write passwords** — note only that credentials exist
+     and must come from environment variables at runtime
+
+5. Check if `<ServiceName>.Tests/` already exists
+   - If YES → this is an append run. Read existing test files to understand
+     what is already covered before adding anything
+   - If NO → this is a first-time scaffold run
+
+6. Check `<ServiceName>/Migrations/`
+   - If empty or missing → fixture uses `EnsureCreatedAsync()`
+   - If populated → fixture uses `MigrateAsync()`
 
 ---
 
-## Step 1 — Create the test project
+## Step 2 — Determine run mode
+
+### First-time scaffold
+`<ServiceName>.Tests/` does not exist. Create the full structure from Step 3
+onward, then generate the CI workflow.
+
+### Append run
+`<ServiceName>.Tests/` already exists. Read existing tests, identify what
+endpoints or methods are not yet covered, and add only the missing tests.
+Do not regenerate the fixture, do not regenerate the CI workflow unless the
+workflow file is missing.
+
+---
+
+## Step 3 — Project structure
+
+### First-time only — create the project
 
 ```bash
-cd <SolutionRoot>
+# Tests live INSIDE the service folder
+cd <ServiceName>
 dotnet new xunit -n <ServiceName>.Tests -o <ServiceName>.Tests
-```
-
-Then add references:
-
-```bash
 cd <ServiceName>.Tests
 
-# Reference the service under test
-dotnet add reference ../<ServiceName>/<ServiceName>.csproj
-
-# Core test packages
+# Reference the service — one level up since we're inside the service folder
+dotnet add reference ../<ServiceName>.csproj
 dotnet add package Moq
 dotnet add package FluentAssertions
 dotnet add package Microsoft.AspNetCore.Mvc.Testing
-
-# Integration test infrastructure
 dotnet add package Testcontainers.PostgreSql
 dotnet add package Testcontainers.RabbitMq
-
-# EF Core in-memory for unit tests
 dotnet add package Microsoft.EntityFrameworkCore.InMemory
-
-# gRPC testing
 dotnet add package Grpc.Net.Client
+dotnet add package Respawn
 ```
 
-Package versions must match the `TargetFramework` found in Step 0.
-For `net10.0` use the latest stable versions. Do not hardcode versions —
-use `dotnet add package <name>` without a version flag so NuGet resolves
-the best compatible version.
+Then add to the solution:
+```bash
+cd <SolutionRoot>
+dotnet sln add <ServiceName>/<ServiceName>.Tests/<ServiceName>.Tests.csproj
+```
 
----
+Do not pin package versions — let NuGet resolve the best compatible version
+for the target framework.
 
-## Step 2 — Folder structure to create
+### Folder structure
 
 ```
-<ServiceName>.Tests/
-├── <ServiceName>.Tests.csproj
+<ServiceName>/                          ← service folder
+└── <ServiceName>.Tests/                ← test project lives HERE, inside the service
+    ├── <ServiceName>.Tests.csproj
+├── appsettings.Testing.json        ← env var references only, no values
 ├── Unit/
 │   ├── Services/
-│   │   └── <ServiceName>ServiceTests.cs      ← tests for IServiceInterface impl
+│   │   └── <ServiceName>ServiceTests.cs
 │   └── Entities/
-│       └── <EntityName>EntityTests.cs        ← entity construction, validation
-├── Integration/
-│   ├── Fixtures/
-│   │   └── IntegrationTestFixture.cs         ← Testcontainers setup, WebApplicationFactory
-│   ├── Rest/
-│   │   └── <ServiceName>EndpointsTests.cs    ← HTTP endpoint tests via HttpClient
-│   └── Grpc/
-│       └── <ServiceName>GrpcTests.cs         ← gRPC client tests via GrpcChannel
-└── appsettings.Testing.json
+│       └── <EntityName>EntityTests.cs
+└── Integration/
+    ├── Fixtures/
+    │   └── IntegrationTestFixture.cs
+    ├── Rest/
+    │   └── <ServiceName>EndpointsTests.cs
+    └── Grpc/
+        └── <ServiceName>GrpcTests.cs   ← omit entirely if no gRPC impl found
 ```
 
 ---
 
-## Step 3 — `appsettings.Testing.json`
+## Step 4 — `appsettings.Testing.json`
 
-The agent generates this file using the actual postgres/rabbitmq credentials
-read from `docker-compose.yml` and `.env` in Step 0:
+**No credential values. Environment variable references only.**
 
 ```json
 {
   "ConnectionStrings": {
-    "<DbContextName>": "Host=localhost;Port=<PORT>;Database=<ServiceName>_test;Username=<USER>;Password=<PASS>"
+    "<DbContextName>": "Host=localhost;Port=5432;Database=<ServiceName>_test;Username=${DB_USER};Password=${DB_PASSWORD}"
   },
   "RabbitMQ": {
     "Host": "localhost",
-    "Port": "<AMQP_PORT>"
+    "Port": "5672"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
   }
 }
 ```
 
-Port, username, and password are filled in from what was read — never hardcoded
-as placeholders.
+The actual credentials are injected at runtime by `IntegrationTestFixture`
+via `WebApplicationFactory` overrides — the settings file is never the
+source of truth for credentials in tests.
 
 ---
 
-## Step 4 — `IntegrationTestFixture.cs`
+## Step 5 — `IntegrationTestFixture.cs`
 
-This is the most important file. It:
-- Spins up a real PostgreSQL container via Testcontainers (NOT docker-compose)
-- Spins up a real RabbitMQ container via Testcontainers
-- Creates a `WebApplicationFactory<Program>` that overrides the connection string
-- Runs `MigrateAsync()` against the test database before any test runs
-- Tears down containers after the test class completes
+Testcontainers manages real PostgreSQL and RabbitMQ containers. No
+docker-compose dependency. Containers start before any test in the
+collection and are torn down after.
 
-Template pattern:
+The `Respawn` package resets database state between individual tests so
+tests are fully isolated without restarting containers.
 
 ```csharp
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Testcontainers.PostgreSql;
+using Testcontainers.RabbitMq;
+using Respawn;
+using Grpc.Net.Client;
+
+// Resolved from Step 1 reads:
+// <DbContextName>   → actual DbContext class name
+// <ServiceName>     → actual service name
+// HasRabbitMQ       → true if publisher/consumer found in Program.cs
+
+[CollectionDefinition("Integration")]
+public class IntegrationCollection : ICollectionFixture<IntegrationTestFixture> { }
+
 public class IntegrationTestFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres;
-    private readonly RabbitMqContainer _rabbitmq;
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
+        .WithImage("postgres:15-alpine")
+        .Build();
+
+    // Include only if service has RabbitMQ publisher or consumer:
+    private readonly RabbitMqContainer _rabbitmq = new RabbitMqBuilder()
+        .WithImage("rabbitmq:3-management")
+        .Build();
+
+    private WebApplicationFactory<Program> _factory = null!;
+    private Respawner _respawner = null!;
+
     public HttpClient Client { get; private set; } = null!;
     public GrpcChannel GrpcChannel { get; private set; } = null!;
-
-    public IntegrationTestFixture()
-    {
-        _postgres = new PostgreSqlBuilder()
-            .WithImage("postgres:15-alpine")
-            .WithDatabase("<ServiceName>_test")
-            .WithUsername("<USER_FROM_COMPOSE>")
-            .WithPassword("<PASS_FROM_COMPOSE>")
-            .Build();
-
-        _rabbitmq = new RabbitMqBuilder()
-            .WithImage("rabbitmq:3-management")
-            .Build();
-    }
 
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
-        await _rabbitmq.StartAsync();
+        // await _rabbitmq.StartAsync(); // include if HasRabbitMQ
 
-        var factory = new WebApplicationFactory<Program>()
+        _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(host =>
             {
-                host.UseSetting(
-                    "ConnectionStrings::<DbContextName>",
-                    _postgres.GetConnectionString());
-                host.UseSetting("RabbitMQ:Host", _rabbitmq.Hostname);
-                host.UseSetting("RabbitMQ:Port", _rabbitmq.GetMappedPublicPort(5672).ToString());
+                host.UseEnvironment("Testing");
+                host.ConfigureServices(services =>
+                {
+                    // Remove existing DbContext registration
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<<DbContextName>>));
+                    if (descriptor != null) services.Remove(descriptor);
+
+                    // Register with Testcontainers connection string — no hardcoded credentials
+                    services.AddDbContext<<DbContextName>>(options =>
+                        options.UseNpgsql(_postgres.GetConnectionString()));
+
+                    // Override RabbitMQ if applicable:
+                    // services.Configure<RabbitMQOptions>(o => {
+                    //     o.Host = _rabbitmq.Hostname;
+                    //     o.Port = _rabbitmq.GetMappedPublicPort(5672);
+                    // });
+                });
             });
 
-        Client = factory.CreateClient();
-        GrpcChannel = GrpcChannel.ForAddress(factory.Server.BaseAddress, new GrpcChannelOptions
+        // Run migrations or ensure schema exists
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<<DbContextName>>();
+        // Use MigrateAsync if Migrations/ folder is populated, else EnsureCreatedAsync:
+        await db.Database.MigrateAsync();     // ← swap per Step 1 finding
+        // await db.Database.EnsureCreatedAsync();
+
+        Client = _factory.CreateClient();
+
+        GrpcChannel = GrpcChannel.ForAddress(
+            _factory.Server.BaseAddress,
+            new GrpcChannelOptions { HttpClient = _factory.CreateClient() });
+
+        // Set up Respawn for between-test DB resets
+        using var conn = new Npgsql.NpgsqlConnection(_postgres.GetConnectionString());
+        await conn.OpenAsync();
+        _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
         {
-            HttpClient = factory.CreateClient()
+            DbAdapter = DbAdapter.Postgres,
+            SchemasToInclude = new[] { "public" }
         });
+    }
+
+    // Call this from each integration test class's constructor or BeforeEach
+    public async Task ResetDatabaseAsync()
+    {
+        using var conn = new Npgsql.NpgsqlConnection(_postgres.GetConnectionString());
+        await conn.OpenAsync();
+        await _respawner.ResetAsync(conn);
     }
 
     public async Task DisposeAsync()
     {
         await _postgres.DisposeAsync();
-        await _rabbitmq.DisposeAsync();
+        // await _rabbitmq.DisposeAsync(); // include if HasRabbitMQ
+        await _factory.DisposeAsync();
     }
 }
 ```
 
-The agent fills in the real `<DbContextName>`, credentials, and service name
-from what it read in Step 0.
-
 ---
 
-## Step 5 — Unit test patterns
+## Step 6 — Unit test patterns
 
-### Service tests
-- Use Moq to mock the `DbContext` OR use `UseInMemoryDatabase`
-- Test every public method on the service implementation
-- Cover: happy path, not found (null return), validation failures
-- Do NOT test EF Core internals — test your service's behaviour
+Unit tests use in-memory database. No containers, no network, fast.
+
+### Service tests — one test class per service interface method
 
 ```csharp
 public class <ServiceName>ServiceTests
@@ -213,106 +308,232 @@ public class <ServiceName>ServiceTests
     public <ServiceName>ServiceTests()
     {
         var options = new DbContextOptionsBuilder<<DbContextName>>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()) // unique per test
             .Options;
         _context = new <DbContextName>(options);
         _service = new <ServiceImplementation>(_context);
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenExists_ReturnsEntity() { ... }
+    public async Task GetAllAsync_WhenEmpty_ReturnsEmptyList()
+    {
+        var result = await _service.GetAllAsync(CancellationToken.None);
+        result.Should().BeEmpty();
+    }
 
     [Fact]
-    public async Task GetByIdAsync_WhenNotFound_ReturnsNull() { ... }
+    public async Task GetAllAsync_WhenSeeded_ReturnsAllEntities()
+    {
+        // Arrange — seed directly via context, not via service
+        _context.<DbSet>.Add(new <Entity>(<valid constructor args>));
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _service.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result.Should().HaveCount(1);
+    }
 
     [Fact]
-    public async Task CreateAsync_WithValidData_PersistsEntity() { ... }
+    public async Task GetByIdAsync_WhenExists_ReturnsEntity()
+    {
+        var entity = new <Entity>(<valid constructor args>);
+        _context.<DbSet>.Add(entity);
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetByIdAsync(entity.Id, CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(entity.Id);
+    }
 
     [Fact]
-    public async Task CreateAsync_WithValidData_ReturnsCreatedEntity() { ... }
+    public async Task GetByIdAsync_WhenNotFound_ReturnsNull()
+    {
+        var result = await _service.GetByIdAsync(Guid.NewGuid(), CancellationToken.None);
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithValidData_PersistsAndReturnsEntity()
+    {
+        var request = new <CreateBody>(<valid test values>);
+        var result = await _service.CreateAsync(request, CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result.Id.Should().NotBeEmpty();
+        _context.<DbSet>.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenExists_RemovesEntity()
+    {
+        var entity = new <Entity>(<valid constructor args>);
+        _context.<DbSet>.Add(entity);
+        await _context.SaveChangesAsync();
+
+        await _service.DeleteAsync(entity.Id, CancellationToken.None);
+
+        _context.<DbSet>.Should().BeEmpty();
+    }
 }
 ```
 
 ### Entity tests
-- Test constructor: correct property assignment, `Id` is not empty Guid, `CreatedAt` is set
-- Test any domain rules on the entity
 
 ```csharp
-[Fact]
-public void Constructor_SetsAllProperties_Correctly() { ... }
+public class <EntityName>EntityTests
+{
+    [Fact]
+    public void Constructor_AssignsAllProperties()
+    {
+        var entity = new <Entity>(<valid constructor args>);
+        entity.FirstName.Should().Be(<expected>);
+        // assert every property set by constructor
+    }
 
-[Fact]
-public void Constructor_GeneratesNonEmptyId() { ... }
+    [Fact]
+    public void Constructor_GeneratesNonEmptyId()
+    {
+        var entity = new <Entity>(<valid constructor args>);
+        entity.Id.Should().NotBe(Guid.Empty);
+    }
+
+    [Fact]
+    public void Constructor_SetsCreatedAt_ToUtcNow()
+    {
+        var before = DateTime.UtcNow;
+        var entity = new <Entity>(<valid constructor args>);
+        entity.CreatedAt.Should().BeOnOrAfter(before);
+        entity.CreatedAt.Kind.Should().Be(DateTimeKind.Utc);
+    }
+}
 ```
 
 ---
 
-## Step 6 — Integration test patterns
+## Step 7 — Integration test patterns
 
 ### REST endpoint tests
-Use `IntegrationTestFixture.Client` (real `HttpClient` against real DB):
 
 ```csharp
 [Collection("Integration")]
-public class <ServiceName>EndpointsTests : IClassFixture<IntegrationTestFixture>
+public class <ServiceName>EndpointsTests : IAsyncLifetime
 {
+    private readonly IntegrationTestFixture _fixture;
     private readonly HttpClient _client;
 
     public <ServiceName>EndpointsTests(IntegrationTestFixture fixture)
     {
+        _fixture = fixture;
         _client = fixture.Client;
     }
 
-    [Fact]
-    public async Task GET_api_<servicename>_ReturnsOk() { ... }
+    // Reset DB between each test for full isolation
+    public async Task InitializeAsync() => await _fixture.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task POST_api_<servicename>_WithValidBody_ReturnsCreated() { ... }
+    public async Task GET_Returns200_WithEmptyList()
+    {
+        var response = await _client.GetAsync("/api/<servicepath>");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<List<<Entity>>>();
+        body.Should().BeEmpty();
+    }
 
     [Fact]
-    public async Task GET_api_<servicename>_id_WhenNotFound_Returns404() { ... }
+    public async Task POST_WithValidBody_Returns201()
+    {
+        var payload = new { <valid fields matching CreateBody> };
+        var response = await _client.PostAsJsonAsync("/api/<servicepath>", payload);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task POST_WithMissingRequiredField_Returns400()
+    {
+        var payload = new { /* intentionally missing required field */ };
+        var response = await _client.PostAsJsonAsync("/api/<servicepath>", payload);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GET_ById_WhenNotFound_Returns404()
+    {
+        var response = await _client.GetAsync($"/api/<servicepath>/{Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GET_ById_WhenExists_Returns200()
+    {
+        // Seed via POST first
+        var created = await _client.PostAsJsonAsync("/api/<servicepath>",
+            new { <valid fields> });
+        var location = created.Headers.Location!.ToString();
+
+        var response = await _client.GetAsync(location);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 }
 ```
 
-### gRPC tests
-Use `IntegrationTestFixture.GrpcChannel`:
+### gRPC tests — omit this file entirely if no gRPC impl found in Step 1
 
 ```csharp
-[Fact]
-public async Task GetStaff_WithValidId_ReturnsResponse()
+[Collection("Integration")]
+public class <ServiceName>GrpcTests : IAsyncLifetime
 {
-    var client = new <ServiceName>Service.<ServiceName>ServiceClient(_fixture.GrpcChannel);
-    var response = await client.Get<Entity>Async(new Get<Entity>Request { Id = seededId });
-    response.Should().NotBeNull();
-}
+    private readonly IntegrationTestFixture _fixture;
 
-[Fact]
-public async Task GetStaff_WithInvalidId_ThrowsNotFound()
-{
-    var client = new <ServiceName>Service.<ServiceName>ServiceClient(_fixture.GrpcChannel);
-    var act = async () => await client.Get<Entity>Async(new Get<Entity>Request { Id = Guid.NewGuid().ToString() });
-    await act.Should().ThrowAsync<RpcException>()
-        .Where(e => e.StatusCode == StatusCode.NotFound);
+    public <ServiceName>GrpcTests(IntegrationTestFixture fixture)
+        => _fixture = fixture;
+
+    public async Task InitializeAsync() => await _fixture.ResetDatabaseAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task Get<Entity>_WithValidId_ReturnsResponse()
+    {
+        // Seed via HTTP client so test doesn't bypass service layer
+        var created = await _fixture.Client.PostAsJsonAsync(
+            "/api/<servicepath>", new { <valid fields> });
+        var entity = await created.Content.ReadFromJsonAsync<<Entity>>();
+
+        var grpcClient = new <ServiceName>Service.<ServiceName>ServiceClient(
+            _fixture.GrpcChannel);
+        var response = await grpcClient.Get<Entity>Async(
+            new Get<Entity>Request { Id = entity!.Id.ToString() });
+
+        response.Should().NotBeNull();
+        response.Id.Should().Be(entity.Id.ToString());
+    }
+
+    [Fact]
+    public async Task Get<Entity>_WithInvalidId_ThrowsNotFound()
+    {
+        var grpcClient = new <ServiceName>Service.<ServiceName>ServiceClient(
+            _fixture.GrpcChannel);
+
+        var act = async () => await grpcClient.Get<Entity>Async(
+            new Get<Entity>Request { Id = Guid.NewGuid().ToString() });
+
+        await act.Should().ThrowAsync<RpcException>()
+            .Where(e => e.StatusCode == StatusCode.NotFound);
+    }
 }
 ```
 
 ---
 
-## Step 7 — Add test project to solution
+## Step 8 — GitHub Actions CI workflow
 
-```bash
-cd <SolutionRoot>
-dotnet sln add <ServiceName>.Tests/<ServiceName>.Tests.csproj
-```
+One workflow file per service. Created at:
+`.github/workflows/<service-name>-ci.yml`
 
----
-
-## Step 8 — GitHub Actions workflow
-
-The agent creates `.github/workflows/<service-name>-ci.yml`.
-
-One workflow file per service. It triggers on push/PR to paths that affect
-that service only — avoiding rebuilding everything on every commit.
+Only regenerate if it does not already exist.
 
 ```yaml
 name: <ServiceName> CI
@@ -324,16 +545,25 @@ on:
       - '<ServiceName>.Tests/**'
       - 'Shared/**'
       - 'docker-compose.yml'
+      - '.github/workflows/<service-name>-ci.yml'
   pull_request:
     paths:
       - '<ServiceName>/**'
       - '<ServiceName>.Tests/**'
       - 'Shared/**'
       - 'docker-compose.yml'
+      - '.github/workflows/<service-name>-ci.yml'
+
+# Prevent duplicate runs — cancel in-progress run on the same branch
+# when a new push arrives
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20      # hard ceiling — agent or test loop cannot run forever
 
     steps:
       - uses: actions/checkout@v4
@@ -341,33 +571,56 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '<VERSION_FROM_CSPROJ>.x'   # e.g. 10.0.x
+          dotnet-version: '<VERSION>.x'    # resolved from TargetFramework in Step 1
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
 
       - name: Restore
         run: dotnet restore <ServiceName>/<ServiceName>.csproj
 
-      - name: Build
+      - name: Build service
         run: dotnet build <ServiceName>/<ServiceName>.csproj --no-restore -c Release
 
+      - name: Build tests
+        run: dotnet build <ServiceName>.Tests/<ServiceName>.Tests.csproj --no-restore -c Release
+
       - name: Run unit tests
-        run: dotnet test <ServiceName>.Tests/<ServiceName>.Tests.csproj
-          --filter "FullyQualifiedName~Unit"
-          --no-build
-          -c Release
-          --logger "github-actions"
+        run: |
+          dotnet test <ServiceName>.Tests/<ServiceName>.Tests.csproj \
+            --no-build \
+            -c Release \
+            --filter "FullyQualifiedName~Unit" \
+            --logger "github-actions;verbosity=normal" \
+            --results-directory ./test-results/unit
 
       - name: Run integration tests
-        run: dotnet test <ServiceName>.Tests/<ServiceName>.Tests.csproj
-          --filter "FullyQualifiedName~Integration"
-          --no-build
-          -c Release
-          --logger "github-actions"
+        run: |
+          dotnet test <ServiceName>.Tests/<ServiceName>.Tests.csproj \
+            --no-build \
+            -c Release \
+            --filter "FullyQualifiedName~Integration" \
+            --logger "github-actions;verbosity=normal" \
+            --results-directory ./test-results/integration
         env:
           DOTNET_ENVIRONMENT: Testing
+          # Testcontainers pulls images — no docker-compose, no .env needed here
+
+      - name: Upload test results
+        if: always()       # upload even on failure so results are visible
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-<service-name>
+          path: ./test-results/
 
   docker-build:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: build-and-test   # only runs if tests pass
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -380,26 +633,66 @@ jobs:
             .
 ```
 
-Key rules:
-- `dotnet-version` is read from the `TargetFramework` found in Step 0
-- Integration tests use Testcontainers — no `docker-compose up` needed in CI
-- Docker build uses solution root as context (matches the Dockerfile COPY paths)
-- Unit and integration tests run as separate steps so failures are easy to identify
-- The workflow only triggers when relevant paths change
+---
+
+## Step 9 — Verify before finishing
+
+The agent must run these commands and fix any errors before stopping:
+
+```bash
+# 1. Build compiles cleanly
+dotnet build <ServiceName>.Tests/<ServiceName>.Tests.csproj
+
+# 2. Unit tests run (fast — no containers needed)
+dotnet test <ServiceName>.Tests/<ServiceName>.Tests.csproj \
+  --filter "FullyQualifiedName~Unit"
+
+# 3. Project is in the solution
+dotnet sln list | grep <ServiceName>.Tests
+```
+
+Integration tests are NOT required to pass locally — they need Docker running
+and will be validated by the CI pipeline. Unit tests MUST pass before the
+agent is done.
+
+If `dotnet build` fails, read the errors, fix the generated files, and rebuild.
+Do not stop until unit tests pass. Maximum 3 fix iterations — if still failing
+after 3, output a clear summary of what is broken and why, then stop.
 
 ---
 
-## Rules the agent must follow
+## Step 10 — Append mode rules
 
-1. Read before writing — never assume a class name, namespace, or package version
-2. All placeholder values (`<ServiceName>`, `<DbContextName>`, etc.) must be
-   resolved from the actual files before any output is written
-3. Never generate a test that imports a namespace that doesn't exist in the service
-4. If a service has no gRPC implementation, skip the `Grpc/` test folder entirely
-5. If a service has no RabbitMQ publisher/consumer, skip RabbitMQ container setup
-   in the fixture and remove the `Testcontainers.RabbitMq` package reference
-6. Every generated test must compile — no pseudocode, no `// TODO` stubs left
-   in method bodies. Incomplete tests use `Assert.True(true)` as a placeholder
-   with a `// SCAFFOLD` comment so they are findable
-7. After all files are written, run `dotnet build <ServiceName>.Tests` and fix
-   any compiler errors before finishing
+When `<ServiceName>.Tests/` already exists:
+
+1. Read all existing test files to build a map of what is covered
+2. Read the current service endpoints and methods to find what is NOT covered
+3. Add new test methods to the bottom of existing test classes
+4. Never delete, rename, or reorder existing tests
+5. New tests follow the same naming and assertion style as existing ones
+6. Do not regenerate `IntegrationTestFixture.cs` — only add tests that use it
+7. Do not regenerate the CI workflow — it already covers the service
+
+The agent adds a comment block before each appended section:
+
+```csharp
+// ── Appended by scaffold agent ────────────────────────────────
+// Covers: <EndpointName> added <date>
+// ─────────────────────────────────────────────────────────────
+```
+
+---
+
+## Model-agnostic notes
+
+This skill is designed to work with any LLM available via CLI
+(Claude Code, Ollama, llama.cpp, etc.). Keep this in mind:
+
+- Each step is self-contained so a smaller context window can process one
+  step at a time if needed
+- No step requires holding the entire service in memory simultaneously —
+  read, extract the specific facts needed, discard the raw source
+- The facts extracted in Step 1 (a short list of names and flags) are the
+  only things carried forward into generation steps
+- If running on a local model with a small context window, the orchestrating
+  script can run steps sequentially, piping only the extracted facts between them
