@@ -1,10 +1,8 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using FluentAssertions;
 using Grpc.Core;
 
-// Namespace avoids shadowing the proto-generated StaffService class in the global namespace
-namespace CarDealership.StaffTests.Integration.Grpc;
+namespace CarDealership.StaffService.Tests.Integration.Grpc;
 
 [Collection("Integration")]
 public class StaffGrpcTests : IAsyncLifetime
@@ -18,32 +16,31 @@ public class StaffGrpcTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task GetStaff_WithValidId_ReturnsCorrectStaff()
+    public async Task GetStaff_WithValidId_ReturnsCorrectStaffResponse()
     {
-        var payload = new
+        var createPayload = new
         {
-            firstName = "Alice",
-            lastName = "Smith",
-            role = Role.salesperson,
-            email = "alice@dealer.com",
-            phone = "0821234567"
+            firstName = "Thabo",
+            lastName = "Nkosi",
+            role = 0,
+            email = "thabo.nkosi@dealer.test",
+            phone = "+27 82 555 0100"
         };
-        var created = await _fixture.Client.PostAsJsonAsync("/", payload);
-        var createdBody = await created.Content.ReadFromJsonAsync<JsonElement>();
-        var id = createdBody.GetProperty("id").GetGuid().ToString();
+        var created = await _fixture.Client.PostAsJsonAsync("/", createPayload);
+        var employee = await created.Content.ReadFromJsonAsync<StaffEntitiy>();
 
         var grpcClient = new global::StaffService.StaffServiceClient(_fixture.GrpcChannel);
-        var response = await grpcClient.GetStaffAsync(new GetStaffRequest { Id = id });
+        var response = await grpcClient.GetStaffAsync(new GetStaffRequest { Id = employee!.Id.ToString() });
 
         response.Should().NotBeNull();
-        response.Id.Should().Be(id);
-        response.FirstName.Should().Be("Alice");
-        response.LastName.Should().Be("Smith");
-        response.Role.Should().Be(Role.salesperson.ToString());
+        response.Id.Should().Be(employee.Id.ToString());
+        response.FirstName.Should().Be("Thabo");
+        response.LastName.Should().Be("Nkosi");
+        response.Role.Should().Be("salesperson");
     }
 
     [Fact]
-    public async Task GetStaff_WithInvalidId_ThrowsRpcNotFound()
+    public async Task GetStaff_WithNonExistentId_ThrowsRpcNotFound()
     {
         var grpcClient = new global::StaffService.StaffServiceClient(_fixture.GrpcChannel);
 

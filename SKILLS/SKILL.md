@@ -50,36 +50,31 @@ Verify the target path before creating any file or running any command.
 
 ---
 
-## Step 1 — Read the service (required, no skipping)
+## Step 1 — Read the service manifest (do NOT re-read raw source files)
 
-Run these reads in order:
+The orchestrating script has already extracted the key facts from the service
+into a manifest object appended to this prompt. Read the manifest — it contains
+everything needed to generate tests. Re-reading the raw `.csproj`, `Program.cs`,
+or other source files wastes tokens and slows the run.
 
-1. `<ServiceName>/<ServiceName>.csproj`
-   - Extract: `TargetFramework`, package versions, `RootNamespace` if set
-   - Derive the .NET SDK version for the CI workflow (e.g. `net10.0` → `10.0.x`)
+From the manifest, extract and hold in memory:
+- `serviceName`, `serviceDir`, `testsDir`
+- `targetFramework`, `dotnetVersion` → for the CI workflow `dotnet-version`
+- `rootNamespace` → for all `namespace` declarations in generated files
+- `dbContext` → for `DbContextOptions<>` and fixture overrides
+- `serviceInterface`, `serviceImpl` → for unit test class setup
+- `hasGrpc`, `grpcServices` → skip `Grpc/` folder entirely if `hasGrpc` is false
+- `hasRabbitMq` → skip RabbitMQ container in fixture if false
+- `migrationStrategy` → `MigrateAsync()` or `EnsureCreatedAsync()` in fixture
+- `entities` → entity class names for unit tests
+- `endpointGroups` → base URL paths for REST integration tests
+- `infrastructure.postgresPort`, `infrastructure.rabbitmqPort` → for fixture config
+- `existingTests.hasTests` → determines scaffold vs append mode
 
-2. `<ServiceName>/Program.cs`
-   - Extract: DbContext registration name, registered service interfaces,
-     gRPC service registrations, endpoint map calls
-   - Note: does it call `MigrateAsync()` or `EnsureCreatedAsync()`?
-
-3. List `<ServiceName>/` folder
-   - Find: entity classes, service interface + implementation, gRPC impl file,
-     endpoint extension files, Migrations/ folder (empty or populated?)
-
-4. `docker-compose.yml` at solution root
-   - Extract: postgres service name, port mapping, RabbitMQ service name, port
-   - **Do not extract or write passwords** — note only that credentials exist
-     and must come from environment variables at runtime
-
-5. Check if `<ServiceName>.Tests/` already exists
-   - If YES → this is an append run. Read existing test files to understand
-     what is already covered before adding anything
-   - If NO → this is a first-time scaffold run
-
-6. Check `<ServiceName>/Migrations/`
-   - If empty or missing → fixture uses `EnsureCreatedAsync()`
-   - If populated → fixture uses `MigrateAsync()`
+**Only read a source file if you need something the manifest does not contain**
+(e.g. the exact constructor signature of an entity class for unit test setup).
+If you do read a source file, extract only the specific fact needed and discard
+the rest immediately.
 
 ---
 

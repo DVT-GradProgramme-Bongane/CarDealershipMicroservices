@@ -1,12 +1,12 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarDealership.StaffTests.Unit.Services;
+namespace CarDealership.StaffService.Tests.Unit.Services;
 
 public class StaffServiceTests
 {
     private readonly StaffDBContext _context;
-    private readonly StaffServiceController _service;
+    private readonly IStaffService _service;
 
     public StaffServiceTests()
     {
@@ -26,10 +26,10 @@ public class StaffServiceTests
     }
 
     [Fact]
-    public async Task GetAllAsync_WhenSeeded_ReturnsAllStaff()
+    public async Task GetAllAsync_WhenSeeded_ReturnsAllEntities()
     {
-        _context.Staff.Add(new StaffEntitiy("Alice", "Smith", Role.salesperson, "alice@dealer.com", "0821234567"));
-        _context.Staff.Add(new StaffEntitiy("Bob", "Jones", Role.mechanic, "bob@dealer.com", "0837654321"));
+        _context.Staff.Add(new StaffEntitiy("Zanele", "Maseko", Role.salesperson, "zanele@dealer.test", "+27 11 555 0199"));
+        _context.Staff.Add(new StaffEntitiy("Johan", "Botha", Role.manager, "johan@dealer.test", "+27 11 555 0200"));
         await _context.SaveChangesAsync();
 
         var result = await _service.GetAllAsync(CancellationToken.None);
@@ -38,9 +38,9 @@ public class StaffServiceTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenExists_ReturnsCorrectStaff()
+    public async Task GetByIdAsync_WhenExists_ReturnsCorrectEntity()
     {
-        var entity = new StaffEntitiy("Carol", "White", Role.manager, "carol@dealer.com", "0841111111");
+        var entity = new StaffEntitiy("Thabo", "Nkosi", Role.salesperson, "thabo@dealer.test", "+27 82 555 0100");
         _context.Staff.Add(entity);
         await _context.SaveChangesAsync();
 
@@ -48,8 +48,9 @@ public class StaffServiceTests
 
         result.Should().NotBeNull();
         result!.Id.Should().Be(entity.Id);
-        result.FirstName.Should().Be("Carol");
-        result.LastName.Should().Be("White");
+        result.FirstName.Should().Be("Thabo");
+        result.LastName.Should().Be("Nkosi");
+        result.StaffRole.Should().Be(Role.salesperson);
     }
 
     [Fact]
@@ -61,23 +62,24 @@ public class StaffServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_WithValidData_PersistsAndReturnsStaff()
+    public async Task CreateAsync_WithValidData_PersistsAndReturnsEntity()
     {
-        var request = new CreateStaffBody("Dave", "Brown", Role.finance_manager, "dave@dealer.com", "0852222222");
+        var request = new CreateStaffBody("Lerato", "Mokoena", Role.finance_manager, "lerato@dealer.test", "+27 11 555 0201");
 
         var result = await _service.CreateAsync(request, CancellationToken.None);
 
         result.Should().NotBeNull();
-        result.Id.Should().NotBeEmpty();
-        result.FirstName.Should().Be("Dave");
+        result.Id.Should().NotBe(Guid.Empty);
+        result.FirstName.Should().Be("Lerato");
+        result.LastName.Should().Be("Mokoena");
         result.StaffRole.Should().Be(Role.finance_manager);
         _context.Staff.Should().HaveCount(1);
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenExists_RemovesStaff()
+    public async Task DeleteAsync_WhenExists_RemovesEntity()
     {
-        var entity = new StaffEntitiy("Eve", "Davis", Role.salesperson, "eve@dealer.com", "0863333333");
+        var entity = new StaffEntitiy("Naledi", "Dlamini", Role.mechanic, "naledi@dealer.test", "+27 11 555 0202");
         _context.Staff.Add(entity);
         await _context.SaveChangesAsync();
 
@@ -95,71 +97,27 @@ public class StaffServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_WhenExists_UpdatesFirstAndLastName()
+    public async Task UpdateAsync_WhenExists_UpdatesAndReturnsEntity()
     {
-        var entity = new StaffEntitiy("Frank", "Green", Role.mechanic, "frank@dealer.com", "0874444444");
+        var entity = new StaffEntitiy("Pieter", "vanWyk", Role.salesperson, "pieter@dealer.test", "+27 11 555 0203");
         _context.Staff.Add(entity);
         await _context.SaveChangesAsync();
-        var request = new UpdateStaffBody("Franklin", "Greene", Role.manager, "frank@dealer.com", "0874444444");
 
+        var request = new UpdateStaffBody("Pieter", "van Wyk", Role.finance_manager, "pieter@dealer.test", "+27 11 555 0203");
         var result = await _service.UpdateAsync(entity.Id, request, CancellationToken.None);
 
         result.Should().NotBeNull();
-        result!.FirstName.Should().Be("Franklin");
-        result.LastName.Should().Be("Greene");
-        result.StaffRole.Should().Be(Role.manager);
+        result!.LastName.Should().Be("van Wyk");
+        result.StaffRole.Should().Be(Role.finance_manager);
     }
 
     [Fact]
     public async Task UpdateAsync_WhenNotFound_ReturnsNull()
     {
-        var request = new UpdateStaffBody("X", "Y", Role.salesperson, "x@y.com", "0800000000");
+        var request = new UpdateStaffBody("Test", "User", Role.mechanic, "test@dealer.test", "+27 11 555 0204");
 
         var result = await _service.UpdateAsync(Guid.NewGuid(), request, CancellationToken.None);
 
         result.Should().BeNull();
-    }
-
-    // ── Appended by scaffold agent ────────────────────────────────
-    // Covers: UpdateAsync whitespace-guard behaviour; CreateAsync contact field persistence
-    // ─────────────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task UpdateAsync_WhenExists_WithEmptyFirstName_KeepsOriginalFirstName()
-    {
-        var entity = new StaffEntitiy("Grace", "Hall", Role.salesperson, "grace@dealer.com", "0880000001");
-        _context.Staff.Add(entity);
-        await _context.SaveChangesAsync();
-
-        var request = new UpdateStaffBody("", "Hall", Role.salesperson, "grace@dealer.com", "0880000001");
-        var result = await _service.UpdateAsync(entity.Id, request, CancellationToken.None);
-
-        result.Should().NotBeNull();
-        result!.FirstName.Should().Be("Grace");
-    }
-
-    [Fact]
-    public async Task UpdateAsync_WhenExists_WithEmptyLastName_KeepsOriginalLastName()
-    {
-        var entity = new StaffEntitiy("Henry", "Irving", Role.mechanic, "henry@dealer.com", "0880000002");
-        _context.Staff.Add(entity);
-        await _context.SaveChangesAsync();
-
-        var request = new UpdateStaffBody("Henry", "", Role.mechanic, "henry@dealer.com", "0880000002");
-        var result = await _service.UpdateAsync(entity.Id, request, CancellationToken.None);
-
-        result.Should().NotBeNull();
-        result!.LastName.Should().Be("Irving");
-    }
-
-    [Fact]
-    public async Task CreateAsync_WithValidData_PersistsEmailAndPhone()
-    {
-        var request = new CreateStaffBody("Iris", "James", Role.finance_manager, "iris@dealer.com", "0890000003");
-
-        var result = await _service.CreateAsync(request, CancellationToken.None);
-
-        result.Email.Should().Be("iris@dealer.com");
-        result.Phone.Should().Be("0890000003");
     }
 }

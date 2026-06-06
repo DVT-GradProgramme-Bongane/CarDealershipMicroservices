@@ -29,4 +29,10 @@
     <ProjectReference Include="..\StaffService.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.Testing.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
