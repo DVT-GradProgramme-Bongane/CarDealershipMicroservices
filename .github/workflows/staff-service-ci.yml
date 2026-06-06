@@ -41,7 +41,7 @@ jobs:
       - name: Restore
         run: |
           dotnet restore StaffService/StaffService.csproj
-          dotnet restore StaffService/StaffService.Tests/StaffService.Tests.csproj.csproj
+          dotnet restore StaffService/StaffService.Tests/StaffService.Tests.csproj
 
       - name: Build service
         run: dotnet build StaffService/StaffService.csproj --no-restore -c Release
