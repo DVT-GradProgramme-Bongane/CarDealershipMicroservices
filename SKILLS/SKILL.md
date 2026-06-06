@@ -576,7 +576,9 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Restore
-        run: dotnet restore <ServiceName>/<ServiceName>.csproj
+        run: |
+            dotnet restore <ServiceName>/<ServiceName>.csproj
+            dotnet restore <ServiceName>/<ServiceName>.Tests/<ServiceName>.Tests.csproj
 
       - name: Build service
         run: dotnet build <ServiceName>/<ServiceName>.csproj --no-restore -c Release

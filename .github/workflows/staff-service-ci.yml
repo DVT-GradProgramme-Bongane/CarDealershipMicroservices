@@ -39,7 +39,9 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Restore
-        run: dotnet restore StaffService/StaffService.csproj
+        run: |
+          dotnet restore StaffService/StaffService.csproj
+          dotnet restore StaffService/StaffService.Tests/StaffService.Tests.csproj.csproj
 
       - name: Build service
         run: dotnet build StaffService/StaffService.csproj --no-restore -c Release
