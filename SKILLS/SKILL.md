@@ -592,7 +592,6 @@ jobs:
             --no-build \
             -c Release \
             --filter "FullyQualifiedName~Unit" \
-            --logger "github-actions;verbosity=normal" \
             --results-directory ./test-results/unit
 
       - name: Run integration tests
@@ -601,7 +600,6 @@ jobs:
             --no-build \
             -c Release \
             --filter "FullyQualifiedName~Integration" \
-            --logger "github-actions;verbosity=normal" \
             --results-directory ./test-results/integration
         env:
           DOTNET_ENVIRONMENT: Testing
