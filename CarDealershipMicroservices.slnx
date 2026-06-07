@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docker-compose.yaml" />
+  </Folder>
+  <Project Path="AccessoriesSuppliersService/AccessoriesSuppliersService.csproj" />
+  <Project Path="ClientService/ClientService.csproj" />
+  <Project Path="InventoryService/InventoryService.csproj" />
+  <Project Path="NewCarSalesService/NewCarSalesService.csproj" />
+  <Project Path="NotificationService/NotificationService.csproj" />
+  <Project Path="StaffService/StaffService.csproj" />
+  <Project Path="UsedCarSalesService/UsedCarSalesService.csproj" />
+</Solution>
