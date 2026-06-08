@@ -1,14 +1,44 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
+type NotificationLog = {
+  id: string;
+  event_type: string;
+  payload: string;
+  created_at: string;
+};
+
+
 export default function Page() {
+  const [logs, setLogs] = useState<NotificationLog[]>([]);
+  const [selectedNotification, setSelectedNotification] = useState<NotificationLog | null>(null);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch("http://localhost:5009/notifications");
+        if (response.ok) {
+          const data: NotificationLog[] = await response.json();
+          setLogs(data.reverse()); 
+        }
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      }
+    };
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <>
       <div>
@@ -25,24 +55,36 @@ export default function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 rounded-lg border cursor-pointer transition-colors bg-card hover:bg-accent/50">
-            <div className="flex items-start gap-3">
-              <div className="flex-1 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <code>event-name</code>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    2026-06-08 13:45:10
+          {logs.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Loading events...
+            </p>
+          )}
+          {logs.map((log) => (
+            <div
+              key={log.id}
+              onClick={() => setSelectedNotification(log)}
+              className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                selectedNotification?.id === log.id
+                  ? "bg-accent border-accent-foreground/20"
+                  : "bg-card hover:bg-accent/50"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <code>{log.event_type}</code>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(log.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 border-blue-200">
+                    {log.event_type.split("."[0])}
                   </span>
                 </div>
-                <span
-                  data-slot="badge"
-                  className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&amp;]:hover:bg-secondary/90 bg-blue-100 text-blue-800 border-blue-200"
-                >
-                  service-name
-                </span>
               </div>
             </div>
-          </div>
+          ))}
         </CardContent>
       </Card>
 
@@ -52,54 +94,40 @@ export default function Page() {
           <CardDescription>Detailed event data in JSON format</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                Event name
-              </span>
-              <code>event name</code>
-            </div>
+          {!selectedNotification ? (
+            <p className="text-sm text-muted-foreground">
+              Select an event above to view its payload.
+            </p>
+          ) : (
+            <>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Event name</span>
+                  <code>{selectedNotification.event_type}</code>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Timestamp</span>
+                  <code>{new Date(selectedNotification.created_at).toLocaleString()}</code>
+                </div>
+              </div>
 
-            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                Timestamp
-              </span>
-              <code>2026-06-08 13:45:10</code>
-            </div>
-          </div>
+              <div className="flex flex-col mt-5">
+                <span className="text-xs text-muted-foreground">Service source</span>
+                <span className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit bg-blue-100 text-blue-800 border-blue-200">
+                  {selectedNotification.payload.split(".")[0]}
+                </span>
+              </div>
 
-          <div className="flex flex-col mt-5">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              Service source
-            </span>
-            <span
-              data-slot="badge"
-              className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&amp;&gt;svg]:size-3 gap-1 [&amp;&gt;svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden [a&amp;]:hover:bg-secondary/90 bg-blue-100 text-blue-800 border-blue-200"
-            >
-              service-name
-            </span>
-          </div>
-
-          <div className="flex flex-col mt-5">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              Payload Data
-            </span>
-            <div className="bg-muted p-4 rounded-lg">
-              <pre className="text-xs overflow-x-auto">
-                {`{
-  "jobId": "MNT-456", 
-  "vehicleId": "V-123", 
-  "mechanicId": "M-05",
-  "completedTasks": [ 
-    "Oil change", 
-    "Tire rotation", 
-    "Brake inspection" 
-  ], 
-  "duration": 120 "
-}`}
-              </pre>
-            </div>
-          </div>
+              <div className="flex flex-col mt-5">
+                <span className="text-xs text-muted-foreground">Payload Data</span>
+                <div className="bg-muted p-4 rounded-lg mt-1">
+                  <pre className="text-xs overflow-x-auto">
+                    {JSON.stringify(selectedNotification.payload, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </>
