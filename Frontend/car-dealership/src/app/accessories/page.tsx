@@ -1,1 +1,3 @@
-<h1>This is the accessories page</h1>
+export default function Page() {
+    return <h1>Accessories Page</h1>
+}

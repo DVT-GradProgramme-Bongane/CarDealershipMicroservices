@@ -1,1 +1,3 @@
-<h1>This is the inventory page</h1>
+export default function Page() {
+    return <h1>Inventory Page</h1>
+}

@@ -1,1 +1,3 @@
-<h1>This is the new sales page</h1>
+export default function Page() {
+    return <h1>New-Sales Page</h1>
+}

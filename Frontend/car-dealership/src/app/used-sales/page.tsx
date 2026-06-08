@@ -1,1 +1,3 @@
-<h1>This is the used sales page</h1>
+export default function Page() {
+    return <h1>Used sales Page</h1>
+}
