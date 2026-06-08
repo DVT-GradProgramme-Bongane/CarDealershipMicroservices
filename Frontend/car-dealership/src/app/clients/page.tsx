@@ -9,10 +9,14 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
+  const fetchData = () => {
     fetchClients()
       .then((data) => setClients(data))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   if (loading) return <p className="p-8">Loading clients...</p>;
@@ -88,7 +92,15 @@ export default function Page() {
           </table>
         </div>
       </div>
-      {showModal && <AddClientModal onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <AddClientModal
+          onClose={() => setShowModal(false)}
+          onSuccess={() => {
+            setShowModal(false);
+            fetchData();
+          }}
+        />
+      )}
     </main>
   );
 }
