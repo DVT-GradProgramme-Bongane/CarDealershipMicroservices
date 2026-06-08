@@ -1,3 +1,9 @@
+import { SalesTable } from "@/components/SalesTable";
+
 export default function Page() {
-    return <h1>Used sales Page</h1>
+  return (
+    <div className="p-16">
+      <SalesTable />
+    </div>
+  );
 }
