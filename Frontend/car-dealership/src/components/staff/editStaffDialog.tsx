@@ -12,9 +12,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { getStaffMember, updateStaffMember } from"@/lib/api/staff";
 import { useEffect, useState } from "react";
-import { StaffModel } from "../../app/staff/models/staff.model";
+import { StaffModel } from "@/lib/api/staff";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UpdateStaffMemberRequest } from "../../app/staff/models/DTOs";
+import { UpdateStaffMemberRequest } from "@/lib/api/staff";
 import { Field, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

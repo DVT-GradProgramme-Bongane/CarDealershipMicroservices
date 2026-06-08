@@ -12,9 +12,8 @@ import {
 
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { getStaffMember } from "@/lib/api/staff";
+import { getStaffMember, StaffModel } from "@/lib/api/staff";
 import { useEffect, useState } from "react";
-import { StaffModel } from "../../app/staff/models/staff.model";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 

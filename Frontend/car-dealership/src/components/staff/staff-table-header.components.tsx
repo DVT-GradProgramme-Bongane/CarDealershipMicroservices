@@ -18,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SearchIcon } from "lucide-react";
-import { StaffRolesFilter } from "../../app/staff/models/staff.model";
+import { StaffRolesFilter } from "@/lib/api/staff"; 
 
 interface StaffTableHeaderProps {
     nameFilter: string;

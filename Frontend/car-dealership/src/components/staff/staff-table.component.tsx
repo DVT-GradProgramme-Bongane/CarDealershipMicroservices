@@ -1,7 +1,7 @@
 'use client'
 
 
-import { StaffModel } from "../../app/staff/models/staff.model";
+import { StaffModel } from "@/lib/api/staff"
 import {
     Table,
     TableBody,

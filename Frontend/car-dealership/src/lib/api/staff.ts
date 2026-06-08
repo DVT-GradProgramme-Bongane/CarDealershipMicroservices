@@ -1,5 +1,40 @@
+export interface CreateStaffMemberRequest{
+    FirstName: string,
+    LastName: string,
+    Email: string,
+    Phone: string,
+    Role: string
+}
 
-import { CreateStaffMemberRequest,  UpdateStaffMemberRequest } from "@/app/staff/models/DTOs";
+export interface UpdateStaffMemberRequest{
+        FirstName: string,
+    LastName: string,
+    Email: string,
+    Phone: string,
+    Role: string
+}
+
+
+export type Role = "salesperson" | "mechanic" | "manager" | "financemanager";
+
+export interface StaffModel {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    role: Role;
+}
+
+export interface StaffRolesFilter {
+    all: boolean;
+    salesperson: boolean;
+    financemanager: boolean;
+    mechanic: boolean;
+    manager: boolean;
+}
+
+
 const BASE_URL = 'htt://localhost:300/api/staff'; // api gateway path
 export async function getAllStaffMembers() {
     const response = await fetch(`${BASE_URL}/`)
