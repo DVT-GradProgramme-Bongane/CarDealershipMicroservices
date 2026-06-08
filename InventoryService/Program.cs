@@ -4,9 +4,16 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString =
+    $"Host={builder.Configuration["POSTGRES_HOST"]};" +
+    $"Port={builder.Configuration["POSTGRES_PORT"]};" +
+    $"Database={builder.Configuration["POSTGRES_DB"]};" +
+    $"Username={builder.Configuration["POSTGRES_USER"]};" +
+    $"Password={builder.Configuration["POSTGRES_PASSWORD"]};" +
+    "SearchPath=inventory";
+
 builder.Services.AddDbContext<AppDbContext>(opts =>
-    opts.UseNpgsql(builder.Configuration
-        .GetConnectionString("DefaultConnection")));
+    opts.UseNpgsql(connectionString));
 
 // RabbitMqPublisher uses async init so register via factory
 builder.Services.AddSingleton(sp =>
