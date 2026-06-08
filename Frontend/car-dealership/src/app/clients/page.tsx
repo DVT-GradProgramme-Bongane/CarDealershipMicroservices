@@ -8,6 +8,7 @@ export default function Page() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState("");
 
   const fetchData = () => {
     fetchClients()
@@ -18,6 +19,15 @@ export default function Page() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const filteredClients = clients.filter((client) => {
+    const query = search.toLowerCase();
+    return (
+      `${client.firstName} ${client.lastName}`.toLowerCase().includes(query) ||
+      client.email.toLowerCase().includes(query) ||
+      client.phone.toLowerCase().includes(query)
+    );
+  });
 
   if (loading) return <p className="p-8">Loading clients...</p>;
 
@@ -41,6 +51,8 @@ export default function Page() {
 
         <div className="relative">
           <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pl-10 text-sm shadow-sm placeholder:text-muted-foreground"
             placeholder="Search by name, email, or phone..."
           />
@@ -68,26 +80,37 @@ export default function Page() {
               </tr>
             </thead>
             <tbody>
-              {clients.map((client) => (
-                <tr
-                  key={client.id}
-                  className="border-b hover:bg-muted/50 transition-colors"
-                >
-                  <td className="p-2 align-middle font-medium">
-                    {client.firstName + " " + client.lastName}
-                  </td>
-                  <td className="p-2 align-middle">{client.email}</td>
-                  <td className="p-2 align-middle">{client.phone}</td>
-                  <td className="p-2 align-middle font-mono text-sm">
-                    {client.id}
-                  </td>
-                  <td className="p-2 align-middle">
-                    <button className="border bg-background hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-sm">
-                      View Details
-                    </button>
+              {filteredClients.length > 0 ? (
+                filteredClients.map((client) => (
+                  <tr
+                    key={client.id}
+                    className="border-b hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="p-2 align-middle font-medium">
+                      {client.firstName} {client.lastName}
+                    </td>
+                    <td className="p-2 align-middle">{client.email}</td>
+                    <td className="p-2 align-middle">{client.phone}</td>
+                    <td className="p-2 align-middle font-mono text-sm">
+                      {client.id}
+                    </td>
+                    <td className="p-2 align-middle">
+                      <button className="border bg-background hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-sm">
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="p-4 text-center text-muted-foreground"
+                  >
+                    No clients found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
