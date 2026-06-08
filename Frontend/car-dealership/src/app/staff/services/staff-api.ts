@@ -12,7 +12,7 @@ export async function getAllStaffMembers() {
     return response.json();
 }
 
-export async function getStaffMember(staffMemberId : number) {
+export async function getStaffMember(staffMemberId : string) {
     const response = await fetch(`${BASE_URL}/${staffMemberId}`);
 
     if(!response.ok){
@@ -37,7 +37,7 @@ export async function addStaffMember(data: CreateStaffMemberRequest) {
     return response.json();
 }
 
-export async function updateStaffMember(staffMemberId: number, data: UpdateStaffMemberRequest) {
+export async function updateStaffMember(staffMemberId: string, data: UpdateStaffMemberRequest) {
         const response = await fetch(`${BASE_URL}/${staffMemberId}`, {
         method: 'PUT',
         headers: {'content-type': 'application/json'},
@@ -51,7 +51,7 @@ export async function updateStaffMember(staffMemberId: number, data: UpdateStaff
     }
 }
 
-export async function removeStaffMember(staffMemberId : number) {
+export async function removeStaffMember(staffMemberId : string) {
     const response = await fetch(`${BASE_URL}/${staffMemberId}`, {
         method: 'DELETE',
         headers: {'content-type': 'application/json'}
