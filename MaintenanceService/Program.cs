@@ -12,6 +12,7 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<InventoryGrpcClient>();
+builder.Services.AddSingleton<MaintenanceEventPublisher>();
 
 var connectionString =
     $"Host={Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? builder.Configuration["POSTGRES_HOST"]};" +
