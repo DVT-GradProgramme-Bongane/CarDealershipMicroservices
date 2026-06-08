@@ -125,7 +125,8 @@ The first run builds all images and may take several minutes. Services with `dep
 
 - API Gateway health: <http://localhost:3000/health>
 - RabbitMQ Management UI: <http://localhost:15672> (login credentials provided in the chat)
-- A service through the gateway, e.g. <http://localhost:3000/api/inventory/cars>
+- A service through the gateway, e.g. <http://localhost:3000/api/accessories-suppliers/suppliers>
+- To access the front end <http://localhost:3000>
 
 ---
 
@@ -141,18 +142,19 @@ The database is initialized from two files mounted into the Postgres container's
 
 ### Re-running the seed
 
-Because init scripts only fire on an empty volume, changing `seed.sql` requires a reset:
+Because init scripts only fire on an empty volume, to test properly you need to run the following commands:
 
 ```bash
 docker compose down -v
 docker compose up api-gateway --build
 ```
-
-All seed inserts use `ON CONFLICT (id) DO NOTHING`, so the script is idempotent — safe to re-run against an existing database without duplicate-key errors. To apply the seed manually to a running container without wiping:
+for the api, and
 
 ```bash
-docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < seed.sql
+docker compose up frontend --build
 ```
+to test the front end with the api
+
 
 ### Seeded test data reference
 
@@ -205,23 +207,24 @@ The seed uses **fixed UUIDs** so you can reference the same records across servi
 
 The gateway is **pure routing — no business logic**. It forwards any request under `/api/<service>/*` to the matching service, stripping the prefix.
 
-| Gateway path                     | Forwards to                          |
-|----------------------------------|--------------------------------------|
-| `/api/inventory/*`               | `inventory-service:5001/*`           |
-| `/api/staff/*`                   | `staff-service:5002/*`               |
-| `/api/client/*`                  | `client-service:5003/*`              |
-| `/api/new-car-sales/*`           | `new-car-sales-service:5004/*`       |
-| `/api/used-car-sales/*`          | `used-car-sales-service:5005/*`      |
-| `/api/accessories-suppliers/*`   | `accessories-suppliers-service:5007/*`|
-| `/api/notification/*`            | `notification-service:5009/*`        |
+| Gateway path                     | Forwards to                            |
+|----------------------------------|----------------------------------------|
+| `/api/inventory/*`               | `inventory-service:5001/*`             |
+| `/api/staff/*`                   | `staff-service:5002/*`                 |
+| `/api/client/*`                  | `client-service:5003/*`                |
+| `/api/new-car-sales/*`           | `new-car-sales-service:5004/*`         |
+| `/api/used-car-sales/*`          | `used-car-sales-service:5005/*`        |
+| `/api/accessories-suppliers/*`   | `accessories-suppliers-service:5007/*` |
+| `/api/notification/*`            | `notification-service:5009/*`          |
+| `/api/maintenance/*`             | `maintenance-service:5008/*`           |
 
-> Routes for `/api/financing/*` (5006) and `/api/maintenance/*` (5008) will be added once those services are created.
+> Routes for `/api/financing/*` (5006) will be added once those services are created.
 
 Example:
 
 ```bash
-# Hits the gateway, which proxies to inventory-service:5001/cars
-curl http://localhost:3000/api/inventory/cars
+# Hits the gateway, which proxies to http://maintenance-service:5008/maintenance
+curl http://localhost:3000/api/maintenance/maintenance
 ```
 
 ---
