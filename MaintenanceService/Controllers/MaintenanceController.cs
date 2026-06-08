@@ -1,5 +1,6 @@
 using MaintenanceService.Data;
 using MaintenanceService.Models;
+using MaintenanceService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +11,12 @@ namespace MaintenanceService.Controllers;
 public class MaintenanceController : ControllerBase
 {
     private readonly MaintenanceDbContext _context;
+    private readonly InventoryGrpcClient _inventoryClient;
 
-    public MaintenanceController(MaintenanceDbContext context)
+    public MaintenanceController(MaintenanceDbContext context, InventoryGrpcClient inventoryClient)
     {
         _context = context;
+        _inventoryClient = inventoryClient;
     }
 
     [HttpGet]
@@ -82,6 +85,15 @@ public class MaintenanceController : ControllerBase
         _context.Jobs.Add(job);
         await _context.SaveChangesAsync(cancellationToken);
 
+        try
+        {
+            await _inventoryClient.MarkCarInServiceAsync(job.CarId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Inventory gRPC failed while marking car in service: {ex.Message}");
+        }
+
         return CreatedAtAction(nameof(GetJob), new { id = job.Id }, job);
     }
 
@@ -109,6 +121,18 @@ public class MaintenanceController : ControllerBase
 
         job.Status = NormalizeStatus(request.Status);
         await _context.SaveChangesAsync(cancellationToken);
+
+        if (job.Status == MaintenanceJobStatuses.Completed)
+        {
+            try
+            {
+                await _inventoryClient.MarkCarAvailableAsync(job.CarId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Inventory gRPC failed while marking car available: {ex.Message}");
+            }
+        }
 
         return Ok(job);
     }
