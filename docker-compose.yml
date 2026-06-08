@@ -34,6 +34,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 50s
     networks:
       - dealer-network
 
@@ -46,16 +47,16 @@ services:
     ports:
       - "3000:3000"
     env_file: .env
-    # depends_on:
-    #   - new-car-sales-service
-    #   - accessories-suppliers-service
-    #   - inventory-service
-    #   - used-car-sales-service
-    #   - staff-service
-    #   - client-service
-    #   - notification-service
-    #    - maintenance-service
-    #   - financing-service
+    depends_on:
+      - new-car-sales-service
+      - accessories-suppliers-service
+      - inventory-service
+      - used-car-sales-service
+      - staff-service
+      - client-service
+      - notification-service
+#      - maintenance-service
+#      - financing-service
     networks:
       - dealer-network
 
