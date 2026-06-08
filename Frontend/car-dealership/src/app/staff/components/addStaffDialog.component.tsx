@@ -48,7 +48,7 @@ export default function AddStaffDialog({ onClose }: { onClose: () => void }) {
     }
 
     return (
-        <>
+        <Dialog>
             <DialogTitle>Add Staff Member</DialogTitle>
             <FieldGroup>
                 <Field>
@@ -104,6 +104,6 @@ export default function AddStaffDialog({ onClose }: { onClose: () => void }) {
                     <Button type="button" onClick={handleSubmit}>Submit</Button>
                 </Field>
             </FieldGroup>
-        </>
+        </Dialog>
     );
 }

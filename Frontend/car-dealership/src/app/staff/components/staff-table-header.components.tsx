@@ -33,14 +33,7 @@ export default function StaffTableHeader({
     onRoleToggle,
 }: StaffTableHeaderProps) {
 
-    // get search term and role filter
-
-    function toggleStaffRolesFilter(role: string) {
-
-    }
-
     return (
-
         <div>
             <InputGroup>
                 <InputGroupInput value={nameFilter} onChange={(event) => onNameFilterChange(event.target.value)} placeholder="Search for staff member..." />

@@ -1,14 +1,18 @@
 import DealershipHeader from "./components/header.component";
 import StaffTableHeader from "./components/staff-table-header.components";
 import StaffTable from "./components/staff-table.component";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { StaffModel, StaffRolesFilter } from "./models/staff.model";
 
 import AddStaffDialog from "./components/addStaffDialog.component";
+import { getAllStaffMembers } from "./services/staff-api";
+
+
 export default function Page() {
-    const [staffMembers] = useState<StaffModel[]>([])
+    const [staffMembers, setStaffMembers] = useState<StaffModel[]>([])
     const [staffNameFilter, setStaffNameFilter] = useState("");
     const [staffModel, openAddStaffModel] = useState(false);
+    const [loading, setLoadng] = useState(false);
     const [staffRolesFilter, setStaffRolesFilter] = useState({
         all: true,
         salesperson: false,
@@ -16,6 +20,25 @@ export default function Page() {
         mechanic: false,
         manager: false
     });
+
+
+    useEffect(() => {
+        const fetchStaff = async () => {
+            try {
+                setLoadng(true);
+                const data = await getAllStaffMembers();
+                setStaffMembers(data);
+            } catch (error) {
+                // toost error
+            } finally {
+                setLoadng(false);
+            }
+        }
+
+        fetchStaff();
+    }, []);
+
+    
 
     const filterStaff = useMemo(() => {
         const activeRoles = Object.entries(staffRolesFilter)
@@ -37,6 +60,7 @@ export default function Page() {
         });
     }, [staffMembers, setStaffNameFilter, staffRolesFilter])
 
+
     function toggleRoleFilter(role: keyof StaffRolesFilter) {
         if (role === "all") {
             // Reset everything, select All
@@ -53,21 +77,22 @@ export default function Page() {
     }
 
 
+
     return (
         <div>
-            <DealershipHeader 
-                title="Staff" 
-                description="Manage dealership employees and roles" 
+            <DealershipHeader
+                title="Staff"
+                description="Manage dealership employees and roles"
                 buttonCTA={{
-                    label:"Add Staff Member",
+                    label: "Add Staff Member",
                     onclick: () => openAddStaffModel(true)
-                }} 
+                }}
             />
 
-        {staffModel && (
-            <AddStaffDialog onClose={() => openAddStaffModel(false)}/>
-        )}
-        
+            {staffModel && (
+                <AddStaffDialog onClose={() => openAddStaffModel(false)} />
+            )}
+
 
             <StaffTableHeader
                 nameFilter={staffNameFilter}
@@ -76,7 +101,7 @@ export default function Page() {
                 onRoleToggle={toggleRoleFilter}
             />
 
-            <StaffTable staffData={filterStaff} />
+            <StaffTable staffData={filterStaff} loading={loading}/>
         </div>
     )
 }
