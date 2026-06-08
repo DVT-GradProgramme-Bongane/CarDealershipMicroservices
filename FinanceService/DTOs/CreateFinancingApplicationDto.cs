@@ -1,1 +1,1 @@
-public record CreateFinancingApplicationDto(Guid SaleId, Guid ClientId, decimal LoanAmount, int TermMonths);
+public record CreateFinancingApplicationDto(Guid SaleId, Guid ClientId, decimal LoanAmount, decimal InterestRate, int TermMonths);
