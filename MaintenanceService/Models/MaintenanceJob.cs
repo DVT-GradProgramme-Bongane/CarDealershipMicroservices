@@ -1,4 +1,8 @@
 namespace MaintenanceService.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+
 
 [Table("jobs", Schema = "maintenance")]
 public class MaintenanceJob

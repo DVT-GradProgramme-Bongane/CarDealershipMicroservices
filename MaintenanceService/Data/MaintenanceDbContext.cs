@@ -1,5 +1,7 @@
 namespace MaintenanceService.Data;
 using MaintenanceService.Models;
+using Microsoft.EntityFrameworkCore;
+
 
 public class MaintenanceDbContext : DbContext
 {

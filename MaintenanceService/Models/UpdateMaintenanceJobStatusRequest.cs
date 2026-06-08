@@ -1,4 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace MaintenanceService.Models;
+
+
+
 
 public class UpdateMaintenanceJobStatusRequest
 {
