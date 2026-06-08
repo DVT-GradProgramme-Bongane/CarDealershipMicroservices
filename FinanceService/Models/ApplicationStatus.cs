@@ -1,4 +1,4 @@
-public class ApplicationStatus
+public static class ApplicationStatus
 {
     public const string Pending = "pending";
     public const string Approved = "approved";
