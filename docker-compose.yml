@@ -46,16 +46,16 @@ services:
     ports:
       - "3000:3000"
     env_file: .env
-    depends_on:
-      - new-car-sales-service
-      - accessories-suppliers-service
-      - inventory-service
-      - used-car-sales-service
-      - staff-service
-      - client-service
-      - notification-service
-      # - maintenance-service
-      # - financing-service
+    # depends_on:
+    #   - new-car-sales-service
+    #   - accessories-suppliers-service
+    #   - inventory-service
+    #   - used-car-sales-service
+    #   - staff-service
+    #   - client-service
+    #   - notification-service
+    #    - maintenance-service
+    #   - financing-service
     networks:
       - dealer-network
 
@@ -224,6 +224,22 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    networks:
+      - dealer-network
+
+  # Next.js Frontend
+  frontend:
+    image: frontend
+    build:
+      context: ./Frontend/car-dealership
+      dockerfile: Dockerfile
+    container_name: dealer_frontend
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+    depends_on:
+      - api-gateway
     networks:
       - dealer-network
 
