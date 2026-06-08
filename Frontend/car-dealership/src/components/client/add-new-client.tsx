@@ -1,18 +1,42 @@
-import { useState } from "react";
+"use client";
 
-const EMPTY_FORM = {
-  first_name: "",
-  last_name: "",
+import { useState } from "react";
+import { createClient, CreateClientDto } from "@/lib/api/client";
+
+const EMPTY_FORM: CreateClientDto = {
+  firstName: "",
+  lastName: "",
   email: "",
   phone: "",
-  id_number: "",
+  idNumber: "",
 };
 
-export default function AddClientModal({ onClose }: { onClose: () => void }) {
-  const [form, setForm] = useState(EMPTY_FORM);
+export default function AddClientModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [form, setForm] = useState<CreateClientDto>(EMPTY_FORM);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await createClient(form);
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -22,7 +46,7 @@ export default function AddClientModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose}>&times;</button>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {["first_name", "last_name"].map((f) => (
+          {["firstName", "lastName"].map((f) => (
             <input
               key={f}
               name={f}
@@ -32,7 +56,7 @@ export default function AddClientModal({ onClose }: { onClose: () => void }) {
             />
           ))}
         </div>
-        {["email", "phone", "id_number"].map((f) => (
+        {["email", "phone", "idNumber"].map((f) => (
           <input
             key={f}
             name={f}
@@ -41,6 +65,7 @@ export default function AddClientModal({ onClose }: { onClose: () => void }) {
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           />
         ))}
+        {error && <p className="text-sm text-red-500">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">
           <button
             onClick={onClose}
@@ -48,8 +73,12 @@ export default function AddClientModal({ onClose }: { onClose: () => void }) {
           >
             Cancel
           </button>
-          <button className="rounded-md text-sm font-medium bg-primary text-primary-foreground h-9 px-4">
-            Save Client
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="rounded-md text-sm font-medium bg-primary text-primary-foreground h-9 px-4 disabled:opacity-50"
+          >
+            {loading ? "Saving..." : "Save Client"}
           </button>
         </div>
       </div>
