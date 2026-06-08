@@ -65,7 +65,16 @@ const invoices = [
   },
 ];
 
-export function SalesTable() {
+export async function SalesTable() {
+  const response = await fetch(`http://localhost:5005/used-sales`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch sales");
+  }
+
+  const sales: SalesTransaction[] = await response.json();
+  console.log(sales);
+
   return (
     <Table className="border border-accent p-4">
       <TableCaption>A list of your recent sales</TableCaption>
