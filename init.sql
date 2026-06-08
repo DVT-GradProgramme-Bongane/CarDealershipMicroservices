@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS new_sales.transactions (
     car_id      UUID REFERENCES inventory.cars(id),
     client_id   UUID REFERENCES clients.customers(id),
     staff_id    UUID REFERENCES staff.employees(id),
-    sales_price  DECIMAL(12,2),
+    sale_price  DECIMAL(12,2),
     status      VARCHAR CHECK (status IN ('pending', 'completed', 'cancelled')) DEFAULT 'pending',
     created_at  TIMESTAMP NOT NULL DEFAULT now()
     );

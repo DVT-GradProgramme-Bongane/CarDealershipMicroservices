@@ -7,7 +7,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +30,7 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U dealer -d dealer_db" ]
+      test: ["CMD-SHELL", "pg_isready -U dealer -d dealer_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -54,8 +54,8 @@ services:
       - staff-service
       - client-service
       - notification-service
-      - maintenance-service
-      - financing-service
+      # - maintenance-service
+      # - financing-service
     networks:
       - dealer-network
 
@@ -152,23 +152,23 @@ services:
       - dealer-network
 
   # dotnet
-  financing-service:
-    image: financing-service
-    build:
-      context: .
-      dockerfile: FinancingService/Dockerfile
-    ports:
-      - "5006:5006"
-    environment:
-      - ASPNETCORE_URLS=http://+:5006
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq-service:
-        condition: service_healthy
-    networks:
-      - dealer-network
+  # financing-service:
+  #   image: financing-service
+  #   build:
+  #     context: .
+  #     dockerfile: FinancingService/Dockerfile
+  #   ports:
+  #     - "5006:5006"
+  #   environment:
+  #     - ASPNETCORE_URLS=http://+:5006
+  #   env_file: .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     rabbitmq-service:
+  #       condition: service_healthy
+  #   networks:
+  #     - dealer-network
 
   # node
   accessories-suppliers-service:
@@ -190,23 +190,23 @@ services:
       - dealer-network
 
   # dotnet
-  maintenance-service:
-    image: maintenance-service
-    build:
-      context: .
-      dockerfile: MaintenanceService/Dockerfile
-    ports:
-      - "5008:5008"
-    environment:
-      - ASPNETCORE_URLS=http://+:5008
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq-service:
-        condition: service_healthy
-    networks:
-      - dealer-network
+  # maintenance-service:
+  #   image: maintenance-service
+  #   build:
+  #     context: .
+  #     dockerfile: MaintenanceService/Dockerfile
+  #   ports:
+  #     - "5008:5008"
+  #   environment:
+  #     - ASPNETCORE_URLS=http://+:5008
+  #   env_file: .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     rabbitmq-service:
+  #       condition: service_healthy
+  #   networks:
+  #     - dealer-network
 
   # node
   notification-service:
