@@ -227,6 +227,22 @@ services:
     networks:
       - dealer-network
 
+  # Next.js Frontend
+  frontend:
+    image: frontend
+    build:
+      context: ./Frontend/car-dealership
+      dockerfile: Dockerfile
+    container_name: dealer_frontend
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+    depends_on:
+      - api-gateway
+    networks:
+      - dealer-network
+
 networks:
   dealer-network:
     driver: bridge
