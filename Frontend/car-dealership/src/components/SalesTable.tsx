@@ -17,46 +17,46 @@ export interface SalesTransaction {
   salePrice: number;
   tradeInId: string | null;
   status: string;
-  createdAt: Date;
+  createdAt: string;
 }
 
-export async function SalesTable() {
-  const response = await fetch(`http://localhost:5005/used-sales`);
+type SalesTableProps = {
+  sales: SalesTransaction[];
+};
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch sales");
-  }
-
-  const sales: SalesTransaction[] = await response.json();
+export function SalesTable({ sales }: SalesTableProps) {
+  const totalSales = sales.reduce((sum, sale) => sum + sale.salePrice, 0);
 
   return (
     <Table className="border border-accent p-4">
       <TableCaption>A list of your recent sales</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[100px]">CarId</TableHead>
+          <TableHead>CarId</TableHead>
           <TableHead>ClientId</TableHead>
           <TableHead>StaffId</TableHead>
-          <TableHead className="">SalePrice</TableHead>
-          <TableHead className="">Status</TableHead>
+          <TableHead>Sale Price</TableHead>
+          <TableHead>Status</TableHead>
         </TableRow>
       </TableHeader>
+
       <TableBody>
-        {sales.map((sales) => (
-          <TableRow key={sales.id}>
-            <TableCell className="font-medium">{sales.carId}</TableCell>
-            <TableCell>{sales.clientId}</TableCell>
-            <TableCell>{sales.staffId}</TableCell>
-            <TableCell className="">{sales.salePrice}</TableCell>
-            <TableCell>{sales.status}</TableCell>
+        {sales.map((sale) => (
+          <TableRow key={sale.id}>
+            <TableCell>{sale.carId}</TableCell>
+            <TableCell>{sale.clientId}</TableCell>
+            <TableCell>{sale.staffId}</TableCell>
+            <TableCell>{sale.salePrice}</TableCell>
+            <TableCell>{sale.status}</TableCell>
           </TableRow>
         ))}
       </TableBody>
+
       <TableFooter>
-        {/* Hardcoded sales total */}
         <TableRow>
           <TableCell colSpan={3}>Total Sales</TableCell>
-          <TableCell className="text-right">$2,500.00</TableCell>
+          <TableCell>{totalSales}</TableCell>
+          <TableCell />
         </TableRow>
       </TableFooter>
     </Table>
