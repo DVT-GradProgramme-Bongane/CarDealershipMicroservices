@@ -1,0 +1,1 @@
+public record UpdateApplicationStatusDto(string Status);
