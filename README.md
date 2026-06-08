@@ -289,13 +289,13 @@ curl http://localhost:3000/api/used-car-sales/used-sales \
 
 ```bash
 # List all cars
-curl http://localhost:3000/api/inventory/cars
+curl http://localhost:3000/api/inventory/inventory
 
 # Get one car by ID
-curl http://localhost:3000/api/inventory/cars/9a000f24-d78d-4d76-a19b-aee9000db82a
+curl http://localhost:3000/api/inventory/inventory/9a000f24-d78d-4d76-a19b-aee9000db82a
 
 # Add a new car
-curl http://localhost:3000/api/inventory/cars \
+curl http://localhost:3000/api/inventory/inventory \
   --request POST \
   --header "Content-Type: application/json" \
   --data '{
@@ -315,13 +315,13 @@ curl http://localhost:3000/api/inventory/cars \
 
 ```bash
 # List all employees
-curl http://localhost:3000/api/staff/employees
+curl http://localhost:3000/api/staff/
 
 # Get one employee by ID
-curl http://localhost:3000/api/staff/employees/b4444444-4444-4444-4444-444444444444
+curl http://localhost:3000/api/staff/b4444444-4444-4444-4444-444444444444
 
 # Add an employee
-curl http://localhost:3000/api/staff/employees \
+curl http://localhost:3000/api/staff \
   --request POST \
   --header "Content-Type: application/json" \
   --data '{
@@ -337,13 +337,13 @@ curl http://localhost:3000/api/staff/employees \
 
 ```bash
 # List all customers
-curl http://localhost:3000/api/client/customers
+curl http://localhost:3000/api/client/clients
 
 # Get one customer by ID
-curl http://localhost:3000/api/client/customers/92511f1f-7727-4ed8-9cb7-fbc285212d67
+curl http://localhost:3000/api/client/clients/92511f1f-7727-4ed8-9cb7-fbc285212d67
 
 # Add a customer
-curl http://localhost:3000/api/client/customers \
+curl http://localhost:3000/api/client/clients \
   --request POST \
   --header "Content-Type: application/json" \
   --data '{
@@ -362,13 +362,13 @@ curl http://localhost:3000/api/client/customers \
 curl http://localhost:3000/api/accessories-suppliers/suppliers
 
 # List accessory items
-curl http://localhost:3000/api/accessories-suppliers/items
+curl http://localhost:3000/api/accessories-suppliers/accessories
 
 # List orders
-curl http://localhost:3000/api/accessories-suppliers/orders
+curl http://localhost:3000/api/accessories-suppliers/accessories/orders
 
 # Place an order for a seeded item
-curl http://localhost:3000/api/accessories-suppliers/orders \
+curl http://localhost:3000/api/accessories-suppliers/accessories/orders \
   --request POST \
   --header "Content-Type: application/json" \
   --data '{
@@ -394,27 +394,33 @@ You can also confirm message flow in the RabbitMQ Management UI (<http://localho
 ## Messaging (RabbitMQ)
 
 - **Exchange:** `dealership` (topic, durable). Declared by publishers.
-- **Routing keys:** `sale.new.created`, `sale.new.completed`, and the used-sale equivalents.
-- **Queues/bindings:** declared by **consumers** (e.g. the Notification service binds a queue with a `sale.*` pattern). A publisher alone does **not** create a queue — if no queue is bound to the exchange, published messages are dropped silently. If you expect a message but see no queue, check that a consumer has declared and bound one.
-
-`RABBITMQ_URL` uses the hostname `rabbitmq`, set via `hostname:` on the `rabbitmq-service` container. Keep them in sync if you change either.
+- **Routing keys:** 
+  - `sale.new.created`
+  - `sale.new.completed`
+  - `sale.used.created`
+  - `sale.used.completed`
+  - `financing.approved`
+  - `financing.rejected`
+  - `maintenance.completed`
+  - `accessory.order.placed`
+  - `accessory.stock.low`
+- **Queues/bindings:** declared by **consumers** (e.g. the Notification service binds a queue with a `sale.*` pattern, `QueueName = "notification-queue"`). A publisher alone does **not** create a queue — if no queue is bound to the exchange, published messages are dropped silently. If you expect a message but see no queue, check that a consumer has declared and bound one.
 
 ---
 
 ## Environment Variables
 
-Defined in `.env.example`. Sensitive values (DB user, DB password, RabbitMQ credentials) are **not** included in the repo and will be provided in the chat.
+Defined in `.env`. Sensitive values (DB user, DB password, RabbitMQ credentials) are **not** included in the repo and will be provided in the chat.
 
-| Variable             | Description                                  |
-|----------------------|----------------------------------------------|
-| `POSTGRES_HOST`      | DB hostname (Docker service name)            |
-| `POSTGRES_PORT`      | DB port                                      |
-| `POSTGRES_USER`      | DB user (provided in chat)                   |
-| `POSTGRES_PASSWORD`  | DB password (provided in chat)               |
-| `POSTGRES_DB`        | Database name                                |
-| `SEED_DATA`          | `"true"` to load `seed.sql`; otherwise skip  |
-| `RABBITMQ_URL`       | RabbitMQ connection string                   |
-| `*_SERVICE_URL`      | Internal URLs used by the gateway            |
+| Variable            | Description                                  |
+|---------------------|----------------------------------------------|
+| `POSTGRES_HOST`     | DB hostname (Docker service name)            |
+| `POSTGRES_PORT`     | DB port                                      |
+| `POSTGRES_USER`     | DB user (provided in chat)                   |
+| `POSTGRES_PASSWORD` | DB password (provided in chat)               |
+| `POSTGRES_DB`       | Database name                                |
+| `RABBITMQ_URL`      | RabbitMQ connection string                   |
+| `*_SERVICE_URL`     | Internal URLs used by the gateway            |
 
 ---
 
@@ -423,7 +429,7 @@ Defined in `.env.example`. Sensitive values (DB user, DB password, RabbitMQ cred
 If services communicate via gRPC, all of them must use the **same `.proto` files** to stay compatible:
 
 1. The team leader defines and owns the contracts in a shared `proto/` directory.
-2. Each service's Dockerfile copies them in during build, e.g. `COPY proto/ ./proto/`.
+2. Each service's Dockerfile copies them in during build, e.g. `COPY ./ ./
 3. When a contract changes, the leader distributes the update and every service rebuilds.
 
 Keeping a single source of truth prevents version drift between producers and consumers.
@@ -433,36 +439,41 @@ Keeping a single source of truth prevents version drift between producers and co
 ## Common Commands
 
 ```bash
+# Start (frontend)
+docker compose up frontend --build
+```
+```bash
 # Start (foreground, rebuilds images on Dockerfile changes)
 docker compose up api-gateway --build
-
+```
+```bash
 # Start (background)
 docker compose up api-gateway --build -d
-
+```
+```bash
 # View logs (all services)
 docker compose logs -f
-
+```
+```bash
 # View logs for one service
 docker compose logs -f api-gateway
-
+```
+```bash
 # Stop containers (keeps volumes/data)
 docker compose down
-
+```
+```bash
 # Stop and wipe the database volume (fresh init.sql + seed run next time)
 docker compose down -v
-
+```
+```bash
 # Rebuild a single service
 docker compose build inventory-service
 docker compose up -d inventory-service
-
+```
+```bash
 # List running containers
 docker compose ps
-
-# Open a psql shell inside the Postgres container
-docker compose exec postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
-
-# Manually apply seed data to a running DB (no volume wipe)
-docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < seed.sql
 ```
 
 ---
@@ -476,9 +487,7 @@ All domain services are built on .NET. Each sets `ASPNETCORE_URLS=http://+:<port
 ## Troubleshooting
 
 - **A service fails to connect to Postgres on startup.** The dependent services wait for Postgres's health check, but your app should also retry connections — containers can be marked healthy before your migrations finish.
-- **Database changes in `init.sql` / `seed.sql` not applied.** These only run when the data volume is empty. Run `docker compose down -v` to reset, then `up` again. Check the Postgres logs for the `SEED_DATA=true` line to confirm seeding ran.
-- **Seed data didn't load.** Confirm `SEED_DATA: "true"` is set on the Postgres service and that `02-seed.sh` is executable (`chmod +x`). The guard skips seeding for any other value.
-- **`column "payload" is of type jsonb but expression is of type text`.** The Notification service's `payload` property must be mapped to a `jsonb` column — set `.HasColumnType("jsonb")` (or `[Column("payload", TypeName = "jsonb")]`) on the entity.
+- **Database changes in `init.sql` not applied.** These only run when the data volume is empty. Run `docker compose down -v` to reset, then `up` again.
 - **Foreign key violation on creating a sale.** The referenced `carId` / `clientId` / `staffId` must already exist. Use the seeded IDs above, or create the parent records first.
 - **No queue appears in RabbitMQ.** Publishing to an exchange does not create a queue. A consumer must declare and bind one. Verify the Notification service is running and connected.
 - **Port already in use.** Another process is bound to one of the host ports. Stop it, or change the left-hand side of the `ports` mapping in `docker-compose.yml`.
