@@ -26,10 +26,17 @@ for (const [name, target] of Object.entries(routes)) {
         `/api/${name}`,
         createProxyMiddleware({
             target,
-            changeOrigin: true,
+            changeOrigin: false,
             pathRewrite: { [`^/api/${name}`]: '' },
         })
     );
 }
+app.use(
+    '/',
+    createProxyMiddleware({
+        target: process.env.FRONTEND_URL || 'http://frontend:3000',
+        changeOrigin: false,
+    })
+);
 
 app.listen(3000, () => console.log('API Gateway on :3000'));
