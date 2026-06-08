@@ -12,11 +12,16 @@ public class MaintenanceController : ControllerBase
 {
     private readonly MaintenanceDbContext _context;
     private readonly InventoryGrpcClient _inventoryClient;
+    private readonly MaintenanceEventPublisher _eventPublisher;
 
-    public MaintenanceController(MaintenanceDbContext context, InventoryGrpcClient inventoryClient)
+    public MaintenanceController(
+        MaintenanceDbContext context,
+        InventoryGrpcClient inventoryClient,
+        MaintenanceEventPublisher eventPublisher)
     {
         _context = context;
         _inventoryClient = inventoryClient;
+        _eventPublisher = eventPublisher;
     }
 
     [HttpGet]
@@ -119,10 +124,12 @@ public class MaintenanceController : ControllerBase
             return NotFound(new { message = $"Maintenance job with ID {id} not found." });
         }
 
+        var previousStatus = job.Status;
         job.Status = NormalizeStatus(request.Status);
         await _context.SaveChangesAsync(cancellationToken);
 
-        if (job.Status == MaintenanceJobStatuses.Completed)
+        if (job.Status == MaintenanceJobStatuses.Completed &&
+            !string.Equals(previousStatus, MaintenanceJobStatuses.Completed, StringComparison.OrdinalIgnoreCase))
         {
             try
             {
@@ -131,6 +138,20 @@ public class MaintenanceController : ControllerBase
             catch (Exception ex)
             {
                 Console.WriteLine($"Inventory gRPC failed while marking car available: {ex.Message}");
+            }
+
+            try
+            {
+                await _eventPublisher.PublishCompletedAsync(
+                    job.Id,
+                    job.CarId,
+                    job.ClientId,
+                    job.StaffId,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"RabbitMQ publish failed for maintenance.completed: {ex.Message}");
             }
         }
 
