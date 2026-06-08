@@ -8,6 +8,7 @@
   <Project Path="AccessoriesSuppliersService/AccessoriesSuppliersService.csproj" />
   <Project Path="ClientService/ClientService.csproj" />
   <Project Path="InventoryService/InventoryService.csproj" />
+  <Project Path="MaintenanceService/MaintenanceService.csproj" />
   <Project Path="NewCarSalesService/NewCarSalesService.csproj" />
   <Project Path="NotificationService/NotificationService.csproj" />
   <Project Path="StaffService/StaffService.csproj" />
