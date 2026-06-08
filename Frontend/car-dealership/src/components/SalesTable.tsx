@@ -28,7 +28,6 @@ export async function SalesTable() {
   }
 
   const sales: SalesTransaction[] = await response.json();
-  console.log(sales);
 
   return (
     <Table className="border border-accent p-4">
