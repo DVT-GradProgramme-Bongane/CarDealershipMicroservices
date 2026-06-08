@@ -1,3 +1,3 @@
 export default function Page() {
-    return <h1>Used sales Page</h1>
+  return <h1>Sales Page</h1>;
 }
