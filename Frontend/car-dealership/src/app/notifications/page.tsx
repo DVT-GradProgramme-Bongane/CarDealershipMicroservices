@@ -12,9 +12,9 @@ import {
 
 type NotificationLog = {
   id: string;
-  event_type: string;
+  eventType: string;
   payload: string;
-  created_at: string;
+  createdAt: string;
 };
 
 
@@ -25,7 +25,7 @@ export default function Page() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const response = await fetch("http://localhost:5009/notifications");
+        const response = await fetch("http://localhost:3000/api/notification/notifications");
         if (response.ok) {
           const data: NotificationLog[] = await response.json();
           setLogs(data.reverse()); 
@@ -73,13 +73,13 @@ export default function Page() {
               <div className="flex items-start gap-3">
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between gap-2">
-                    <code>{log.event_type}</code>
+                    <code>{log.eventType}</code>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString()}
+                      {new Date(log.createdAt).toLocaleString()}
                     </span>
                   </div>
                   <span className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 border-blue-200">
-                    {log.event_type.split("."[0])}
+                    {log.eventType}
                   </span>
                 </div>
               </div>
@@ -103,27 +103,27 @@ export default function Page() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground">Event name</span>
-                  <code>{selectedNotification.event_type}</code>
+                  <code>{selectedNotification.eventType}</code>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground">Timestamp</span>
-                  <code>{new Date(selectedNotification.created_at).toLocaleString()}</code>
+                  <code>{new Date(selectedNotification.createdAt).toLocaleString()}</code>
                 </div>
               </div>
 
               <div className="flex flex-col mt-5">
                 <span className="text-xs text-muted-foreground">Service source</span>
                 <span className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit bg-blue-100 text-blue-800 border-blue-200">
-                  {selectedNotification.payload.split(".")[0]}
+                  {selectedNotification.eventType.split(".")[0]}
                 </span>
               </div>
 
               <div className="flex flex-col mt-5">
                 <span className="text-xs text-muted-foreground">Payload Data</span>
                 <div className="bg-muted p-4 rounded-lg mt-1">
-                  <pre className="text-xs overflow-x-auto">
+                  <code className="text-xs overflow-x-auto">
                     {JSON.stringify(selectedNotification.payload, null, 2)}
-                  </pre>
+                  </code>
                 </div>
               </div>
             </>
