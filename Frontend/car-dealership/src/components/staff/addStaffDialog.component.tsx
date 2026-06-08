@@ -1,8 +1,8 @@
-
+'use client'
 
 import { useState } from "react";
-import { CreateStaffMemberRequest } from "../services/DTOs";
-import { addStaffMember } from "../services/staff-api";
+import { CreateStaffMemberRequest } from "../../app/staff/models/DTOs";
+import { addStaffMember } from "@/lib/api/staff";
 
 import {
   Dialog,

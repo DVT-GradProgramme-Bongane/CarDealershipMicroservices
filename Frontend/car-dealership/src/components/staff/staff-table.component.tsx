@@ -1,4 +1,7 @@
-import { StaffModel } from "../models/staff.model";
+'use client'
+
+
+import { StaffModel } from "../../app/staff/models/staff.model";
 import {
     Table,
     TableBody,

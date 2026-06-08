@@ -1,3 +1,6 @@
+'use client'
+
+
 import {
     Dialog,
     DialogClose,
@@ -9,9 +12,9 @@ import {
 
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { getStaffMember } from "../services/staff-api";
+import { getStaffMember } from "@/lib/api/staff";
 import { useEffect, useState } from "react";
-import { StaffModel } from "../models/staff.model";
+import { StaffModel } from "../../app/staff/models/staff.model";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 

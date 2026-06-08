@@ -1,4 +1,5 @@
-import { useState } from "react";
+'use client'
+
 import {
     InputGroup,
     InputGroupAddon,
@@ -17,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SearchIcon } from "lucide-react";
-import { StaffRolesFilter } from "../models/staff.model";
+import { StaffRolesFilter } from "../../app/staff/models/staff.model";
 
 interface StaffTableHeaderProps {
     nameFilter: string;

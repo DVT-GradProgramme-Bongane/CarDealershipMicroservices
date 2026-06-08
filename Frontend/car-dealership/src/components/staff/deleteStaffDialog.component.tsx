@@ -1,3 +1,4 @@
+'use client'
 
 import {
     Dialog,
@@ -9,15 +10,8 @@ import {
 
 } from "@/components/ui/dialog"
 
-import { Label } from "@/components/ui/label"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { removeStaffMember } from "../services/staff-api";
+
+import { removeStaffMember } from "@/lib/api/staff";
 import { Button } from "@/components/ui/button"
 
 export default function DeleteStaffDialog({

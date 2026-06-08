@@ -1,6 +1,5 @@
-import { CreateStaffMemberRequest, UpdateStaffMemberRequest } from "./DTOs";
 
-
+import { CreateStaffMemberRequest,  UpdateStaffMemberRequest } from "@/app/staff/models/DTOs";
 const BASE_URL = 'htt://localhost:300/api/staff'; // api gateway path
 export async function getAllStaffMembers() {
     const response = await fetch(`${BASE_URL}/`)

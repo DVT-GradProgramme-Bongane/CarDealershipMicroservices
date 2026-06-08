@@ -1,11 +1,11 @@
-import DealershipHeader from "./components/header.component";
-import StaffTableHeader from "./components/staff-table-header.components";
-import StaffTable from "./components/staff-table.component";
+import DealershipHeader from "../../components/staff/header.component";
+import StaffTableHeader from "../../components/staff/staff-table-header.components";
+import StaffTable from "../../components/staff/staff-table.component";
 import { useState, useMemo, useEffect } from "react";
 import { StaffModel, StaffRolesFilter } from "./models/staff.model";
 
-import AddStaffDialog from "./components/addStaffDialog.component";
-import { getAllStaffMembers } from "./services/staff-api";
+import AddStaffDialog from "../../components/staff/addStaffDialog.component";
+import { getAllStaffMembers } from "@/lib/api/staff";
 
 
 export default function Page() {

@@ -1,3 +1,4 @@
+'use client'
 
 import {
     Dialog,
@@ -9,11 +10,11 @@ import {
 
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { getStaffMember, updateStaffMember } from "../services/staff-api";
+import { getStaffMember, updateStaffMember } from"@/lib/api/staff";
 import { useEffect, useState } from "react";
-import { StaffModel } from "../models/staff.model";
+import { StaffModel } from "../../app/staff/models/staff.model";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UpdateStaffMemberRequest } from "../services/DTOs";
+import { UpdateStaffMemberRequest } from "../../app/staff/models/DTOs";
 import { Field, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
