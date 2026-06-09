@@ -36,11 +36,9 @@ public class InventoryGrpcService : InventoryService.InventoryServiceBase
         var car = await _db.Cars.FindAsync(Guid.Parse(request.Id));
         if (car is null)
             return new StatusResponse { Success = false };
-
         // gRPC sends status as a raw string — parse it into the enum
         if (!Enum.TryParse<CarStatus>(request.Status, ignoreCase: true, out var parsed))
             return new StatusResponse { Success = false };
-
         car.Status = parsed;
         await _db.SaveChangesAsync();
 
