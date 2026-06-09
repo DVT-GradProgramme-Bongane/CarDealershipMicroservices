@@ -65,7 +65,7 @@ export default function EditStaffDialog({ staffMemberId,
         formData.LastName !== staffData.lastName ||
         formData.Email !== staffData.email ||
         formData.Phone !== staffData.phone ||
-        formData.Role !== staffData.role
+        formData.Role !== staffData.staffRole
     );
 
     function handleChange(field: keyof UpdateStaffMemberRequest, value: string) {

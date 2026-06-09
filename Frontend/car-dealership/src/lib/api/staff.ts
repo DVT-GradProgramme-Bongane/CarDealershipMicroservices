@@ -23,7 +23,7 @@ export interface StaffModel {
     lastName: string;
     email: string;
     phone: string;
-    role: Role;
+    staffRole: Role;
 }
 
 export interface StaffRolesFilter {

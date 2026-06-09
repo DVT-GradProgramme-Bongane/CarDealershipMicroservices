@@ -54,7 +54,7 @@ export default function Page() {
             const matchesRole =
                 staffRolesFilter.all || activeRoles.length === 0
                     ? true
-                    : activeRoles.includes(member.role);
+                    : activeRoles.includes(member.staffRole);
 
             return matchesName && matchesRole;
         });

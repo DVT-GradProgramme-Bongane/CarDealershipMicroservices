@@ -79,7 +79,7 @@ export default function ViewStaffDialog({ staffMemberId,
                                     {staffData.firstName} {staffData.lastName}
                                 </p>
                                 <Badge variant="secondary" className="mt-1 capitalize">
-                                    {staffData.role}
+                                    {staffData.staffRole}
                                 </Badge>
                             </div>
                         </div>

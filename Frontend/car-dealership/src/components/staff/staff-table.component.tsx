@@ -94,7 +94,7 @@ export default function StaffTable({ staffData, loading }: StaffTableProps) {
                                     <TableCell className="font-medium">{staff.email}</TableCell>
                                     <TableCell className="font-medium">{staff.phone}</TableCell>
 
-                                    <TableCell>{staff.role}</TableCell>
+                                    <TableCell>{staff.staffRole}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger>
