@@ -56,7 +56,7 @@ export default function AddClientModal({
             />
           ))}
         </div>
-        {["email", "phone", "idNumber"].map((f) => (
+        {["email", "phone"].map((f) => (
           <input
             key={f}
             name={f}
