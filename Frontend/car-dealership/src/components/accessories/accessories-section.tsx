@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function AccessoriesSection() {
   const [accessories, setAccessories] = useState<AccessoryItemDto[]>([]);
@@ -40,10 +40,11 @@ export function AccessoriesSection() {
       setLoading(false);
     }
   };
+  let refreshToken=false;
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [refreshToken]); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +61,7 @@ export function AccessoriesSection() {
       setSupplierId("");
       setPrice("");
       setStock("");
-      loadData(); // refresh
+      refreshToken=!refreshToken;
     } catch (err: any) {
       setSubmitError(err.message);
     }
@@ -125,11 +126,15 @@ export function AccessoriesSection() {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Supplier</label>
-            <Select required value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
-              <option value="" disabled>Select a supplier</option>
-              {suppliers.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
+            <Select required value={supplierId} onValueChange={(val) => setSupplierId(val || "")}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">

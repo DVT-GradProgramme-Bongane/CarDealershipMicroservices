@@ -15,8 +15,6 @@ builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 
 var app = builder.Build();
 
-await AccessoriesSchemaInitializer.EnsureCreatedAsync(app.Services);
-
 app.MapOpenApi();
 app.MapScalarApiReference("/scalar", options =>
 {

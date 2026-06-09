@@ -28,14 +28,48 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] Car car)
+    public async Task<IActionResult> Create(CreateCarRequest createCarRequest)
     {
-        car.Id = Guid.NewGuid();
-        car.CreatedAt = DateTime.UtcNow;
-        _db.Cars.Add(car);
+        if (!string.IsNullOrWhiteSpace(createCarRequest.Vin))
+        {
+            return BadRequest(new { message = "Vin is required." });
+        }
+        
+        if(createCarRequest.Vin.Length > 17)
+        {
+            return BadRequest(new { message = "Vin number is longer than 17 characters." });
+        };
+        
+        if (!string.IsNullOrWhiteSpace(createCarRequest.Make))
+        {
+            return BadRequest(new { message = "Make is required." });
+        }
+        
+        if (!string.IsNullOrWhiteSpace(createCarRequest.Model))
+        {
+            return BadRequest(new { message = "Model is required." });
+        }
+
+        if (!string.IsNullOrWhiteSpace(createCarRequest.Color))
+        {
+            return BadRequest(new { message = "Color is required." });
+        }
+        
+        var newCar = new Car
+        {
+            Vin = createCarRequest.Vin,
+            Make = createCarRequest.Make,
+            Model = createCarRequest.Model,
+            Year = createCarRequest.Year,
+            Color = createCarRequest.Color,
+            Price = createCarRequest.Price,
+            Mileage = createCarRequest.Mileage,
+        };
+        
+        _db.Cars.Add(newCar);
         await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById),
-            new { id = car.Id }, car);
+        
+        return Created($"/accessories/{newCar.Id}", createCarRequest);;
     }
 
     [HttpPut("{id}")]
@@ -77,3 +111,4 @@ public class InventoryController : ControllerBase
 }
 
 public record StatusUpdateDto(CarStatus Status);
+public sealed record CreateCarRequest(string Vin,string Make, string Model, int Year, string Color, decimal Price, int Mileage);
