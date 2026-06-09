@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 const CLIENTS_API = `${API_BASE}/client`;
 
 export interface Client {
@@ -36,5 +36,25 @@ export async function createClient(data: CreateClientDto): Promise<Client> {
     throw new Error(err.message || "Failed to create client");
   }
 
+  return res.json();
+}
+
+export async function deleteClient(id: string): Promise<void> {
+  const res = await fetch(`${CLIENTS_API}/clients/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete client");
+}
+
+export async function updateClient(id: string, data: CreateClientDto): Promise<Client> {
+  const res = await fetch(`${CLIENTS_API}/clients/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to update client");
+  }
   return res.json();
 }
