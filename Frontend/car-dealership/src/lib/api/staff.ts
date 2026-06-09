@@ -35,7 +35,7 @@ export interface StaffRolesFilter {
 }
 
 
-const BASE_URL = 'htt://localhost:300/api/staff'; // api gateway path
+const BASE_URL = 'http://localhost:3000/api/staff/staff'; // api gateway path
 export async function getAllStaffMembers() {
     const response = await fetch(`${BASE_URL}/`)
 

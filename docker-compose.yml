@@ -53,7 +53,7 @@ services:
       - inventory-service
       - used-car-sales-service
       - staff-service
-      - client-service
+#      - client-service
       - notification-service
       - maintenance-service
 #      - financing-service
