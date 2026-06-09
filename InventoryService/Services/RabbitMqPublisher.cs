@@ -20,8 +20,7 @@ public class RabbitMqPublisher : IAsyncDisposable
     {
         var factory = new ConnectionFactory
         {
-            HostName = config["RabbitMQ:Host"] ?? "localhost",
-            Port     = config.GetValue<int>("RabbitMQ:Port", 5672)
+            Uri= new Uri(config["RABBITMQ_URL"] ?? "localhost")
         };
         var conn    = await factory.CreateConnectionAsync();
         var channel = await conn.CreateChannelAsync();
