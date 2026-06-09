@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS inventory.cars (
     price       DECIMAL(12,2),
     mileage     INT,
     type        VARCHAR CHECK (type IN ('new', 'used')),
-    status      VARCHAR CHECK (status IN ('available', 'sold', 'reserved', 'in-service')) DEFAULT 'available',
+    status      VARCHAR CHECK (status IN ('available', 'sold', 'reserved', 'inservice')) DEFAULT 'available',
     created_at  TIMESTAMP NOT NULL DEFAULT now()
     );
 
