@@ -83,7 +83,7 @@ export default function SaleForm({
                                 </SelectTrigger>
                                 <SelectContent>
                                     {clients.map(c => (
-                                        <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                                        <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -101,7 +101,7 @@ export default function SaleForm({
                                 </SelectTrigger>
                                 <SelectContent>
                                     {salespeople.map(s => (
-                                        <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                                        <SelectItem key={s.id} value={s.label}>{s.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

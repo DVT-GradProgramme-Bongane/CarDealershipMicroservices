@@ -4,11 +4,6 @@ import { useEffect, useState } from "react";
 import SaleForm from "@/components/SaleForm";
 import DropdownItem from "../models/DropdownItem";
 
-const INVENTORY_API = "http://localhost:3000/api/inventory";
-const CLIENTS_API = "http://localhost:5003";
-const STAFF_API = "http://localhost:5002";
-const NEW_SALES_API = "http://localhost:5004";
-
 export default function NewSalesPage() {
     const [vehicles, setVehicles] = useState<DropdownItem[]>([]);
     const [clients, setClients] = useState<DropdownItem[]>([]);
@@ -19,9 +14,9 @@ export default function NewSalesPage() {
         async function loadDropdowns() {
             try {
                 const [inventoryRes, clientsRes, staffRes] = await Promise.all([
-                    fetch(`${INVENTORY_API}/inventory`),
-                    fetch(`${CLIENTS_API}/clients`),
-                    fetch(`${STAFF_API}/staff`),
+                    fetch("/api/inventory"),
+                    fetch("/api/clients"),
+                    fetch("/api/staff"),
                 ]);
 
                 if (!inventoryRes.ok) throw new Error(`Inventory service error: ${inventoryRes.status}`);
@@ -34,7 +29,6 @@ export default function NewSalesPage() {
                     staffRes.json(),
                 ]);
 
-                // Only show new cars that are available
                 setVehicles(
                     inventoryData
                         .filter((car: any) => car.type === "new" && car.status === "available")
@@ -51,7 +45,6 @@ export default function NewSalesPage() {
                     }))
                 );
 
-                // Only show staff with the salesperson role
                 setSalespeople(
                     staffData
                         .filter((member: any) => member.role === "salesperson")
@@ -74,18 +67,16 @@ export default function NewSalesPage() {
         salespersonId: string;
         salePrice: string;
     }) => {
-        const payload = {
-            carId: data.vehicleId,
-            clientId: data.clientId,
-            staffId: data.salespersonId,
-            salePrice: parseFloat(data.salePrice),
-            status: "pending",
-        };
-
-        const response = await fetch(`${NEW_SALES_API}/new-sales`, {
+        const response = await fetch("/api/new-sales", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({
+                carId: data.vehicleId,
+                clientId: data.clientId,
+                staffId: data.salespersonId,
+                salePrice: parseFloat(data.salePrice),
+                status: "pending",
+            }),
         });
 
         if (!response.ok) {
