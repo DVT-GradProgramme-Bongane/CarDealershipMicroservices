@@ -11,13 +11,14 @@ builder.Services.AddScoped<IStaffService, StaffServiceController>();
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(5002); // REST endpoints + api gateway
-    options.ListenAnyIP(5003, listen =>
+    options.ListenAnyIP(5102, listen =>
     {
-        listen.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2; // for grpc 
+        listen.Protocols = HttpProtocols.Http2; // for grpc 
     });
 });
 
 builder.Services.AddGrpc();
+
 
 var app = builder.Build();
 
