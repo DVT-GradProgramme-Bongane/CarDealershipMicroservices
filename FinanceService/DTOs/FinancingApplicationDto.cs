@@ -1,3 +1,4 @@
+namespace FinanceService.DTOs;
 public record FinancingApplicationDto(
     Guid Id,
     Guid SaleId,

@@ -1,3 +1,5 @@
+namespace FinanceService.Models;
+using FinanceService.DTOs;
 public class FinancingApplication
 {
     public Guid Id { get; set; }

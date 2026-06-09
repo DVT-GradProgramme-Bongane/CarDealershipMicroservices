@@ -1,3 +1,4 @@
+namespace FinanceService.Messaging.Models;
 using System.Text.Json.Serialization;
 
 public class SaleCreatedMessage

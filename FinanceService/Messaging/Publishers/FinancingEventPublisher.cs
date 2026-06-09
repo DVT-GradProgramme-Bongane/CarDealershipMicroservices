@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
-
+namespace FinanceService.Messaging.Publishers;
 public class FinancingEventPublisher : IFinancingEventPublisher
 {
     private readonly IConnectionFactory _factory;

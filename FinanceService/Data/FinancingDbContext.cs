@@ -1,4 +1,6 @@
+namespace FinanceService.Data;
 using Microsoft.EntityFrameworkCore;
+using FinanceService.Models;
 
 public class FinancingDbContext : DbContext
 {

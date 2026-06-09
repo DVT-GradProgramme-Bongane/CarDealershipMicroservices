@@ -1,4 +1,4 @@
-namespace FinanceService.Publishers;
+namespace FinanceService.Messaging.Publishers;
 public interface IFinancingEventPublisher
 {
     Task PublishApprovedAsync(Guid applicationId, Guid saleId, Guid clientId, CancellationToken ct);

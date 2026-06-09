@@ -1,3 +1,4 @@
+namespace FinanceService.Models;
 public static class ApplicationStatus
 {
     public const string Pending = "pending";

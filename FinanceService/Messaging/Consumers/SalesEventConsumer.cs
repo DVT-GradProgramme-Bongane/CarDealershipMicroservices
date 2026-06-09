@@ -1,3 +1,8 @@
+namespace FinanceService.Messaging.Consumers;
+
+using FinanceService.Services;
+using FinanceService.Messaging.Models;
+
 public class SaleEventConsumer
 {
     private readonly IFinancingApplicationService _service;

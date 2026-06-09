@@ -1,1 +1,2 @@
+namespace FinanceService.DTOs;
 public record CreateFinancingApplicationDto(Guid SaleId, Guid ClientId, decimal LoanAmount, decimal InterestRate, int TermMonths);
