@@ -17,9 +17,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Car>(e => {
             e.ToTable("cars");
             e.HasIndex(c => c.Vin).IsUnique();
-            e.HasIndex(c => c.Status);
-            e.Property(c => c.Type).HasConversion<string>();
-            e.Property(c => c.Status).HasConversion<string>();
+            // e.HasIndex(c => c.Status);
+            e.Property(c => c.Type).HasConversion(
+                v => v.ToString().ToLowerInvariant(),
+                v => Enum.Parse<CarType>(v, true));
+            e.Property(c => c.Status).HasConversion(
+                v => v.ToString().ToLowerInvariant(),
+                v => Enum.Parse<CarStatus>(v, true));
         });
     }
 }
