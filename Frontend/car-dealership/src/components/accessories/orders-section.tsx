@@ -16,7 +16,7 @@ export function OrdersSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+
   // Form State
   const [itemId, setItemId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -47,9 +47,9 @@ export function OrdersSection() {
     e.preventDefault();
     setSubmitError("");
     try {
-      await createOrder({ 
-        itemId, 
-        quantity: parseInt(quantity, 10) 
+      await createOrder({
+        itemId,
+        quantity: parseInt(quantity, 10)
       });
       setIsDialogOpen(false);
       setItemId("");
@@ -105,7 +105,7 @@ export function OrdersSection() {
         )}
       </CardContent>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogHeader>
           <DialogTitle>Place Order</DialogTitle>
         </DialogHeader>
@@ -128,7 +128,7 @@ export function OrdersSection() {
             <Button type="submit">Order</Button>
           </div>
         </form>
-      </Dialog>
+      </Dialog> */}
     </Card>
   );
 }

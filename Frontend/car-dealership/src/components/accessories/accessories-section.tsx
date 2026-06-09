@@ -16,7 +16,7 @@ export function AccessoriesSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+
   // Form State
   const [name, setName] = useState("");
   const [supplierId, setSupplierId] = useState("");
@@ -49,11 +49,11 @@ export function AccessoriesSection() {
     e.preventDefault();
     setSubmitError("");
     try {
-      await createAccessory({ 
-        name, 
-        supplierId, 
-        price: parseFloat(price), 
-        stock: parseInt(stock, 10) 
+      await createAccessory({
+        name,
+        supplierId,
+        price: parseFloat(price),
+        stock: parseInt(stock, 10)
       });
       setIsDialogOpen(false);
       setName("");
@@ -113,7 +113,7 @@ export function AccessoriesSection() {
         )}
       </CardContent>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogHeader>
           <DialogTitle>Add Accessory</DialogTitle>
         </DialogHeader>
@@ -144,7 +144,7 @@ export function AccessoriesSection() {
             <Button type="submit">Create</Button>
           </div>
         </form>
-      </Dialog>
+      </Dialog> */}
     </Card>
   );
 }
