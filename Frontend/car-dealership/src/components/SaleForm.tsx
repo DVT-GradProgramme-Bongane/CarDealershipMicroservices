@@ -31,12 +31,12 @@ export default function SaleForm({
     });
 
     const [errorMessage, formAction, isPending] = useActionState(
-        async (previousState: string | null, formDataPayload: FormData) => {
+        async (_previousState: string | null, _formDataPayload: FormData) => {
             try {
                 await onSave(formData);
                 return null;
-            } catch (err: any) {
-                return err?.message || "An unexpected error occurred.";
+            } catch (err: unknown) {
+                return (err as { message?: string })?.message || "An unexpected error occurred.";
             }
         },
         null
@@ -83,7 +83,7 @@ export default function SaleForm({
                                 </SelectTrigger>
                                 <SelectContent>
                                     {clients.map(c => (
-                                        <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>
+                                        <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -101,12 +101,15 @@ export default function SaleForm({
                                 </SelectTrigger>
                                 <SelectContent>
                                     {salespeople.map(s => (
-                                        <SelectItem key={s.id} value={s.label}>{s.label}</SelectItem>
+                                        <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        {errorMessage && <p className="text-sm text-red-500 font-medium">{errorMessage}</p>}
+
+                        {errorMessage && (
+                            <p className="text-sm text-red-500 font-medium">{errorMessage}</p>
+                        )}
 
                         <Button
                             type="submit"
