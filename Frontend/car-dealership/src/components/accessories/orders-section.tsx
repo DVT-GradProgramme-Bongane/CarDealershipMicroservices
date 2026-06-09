@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function OrdersSection() {
   const [orders, setOrders] = useState<AccessoryOrderDto[]>([]);
@@ -113,11 +113,15 @@ export function OrdersSection() {
           {submitError && <div className="text-destructive text-sm">{submitError}</div>}
           <div className="space-y-2">
             <label className="text-sm font-medium">Accessory</label>
-            <Select required value={itemId} onChange={(e) => setItemId(e.target.value)}>
-              <option value="" disabled>Select an accessory</option>
-              {accessories.map(a => (
-                <option key={a.id} value={a.id}>{a.name} (Stock: {a.stock})</option>
-              ))}
+            <Select required value={itemId} onValueChange={(val) => setItemId(val || "")}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select an accessory" />
+              </SelectTrigger>
+              <SelectContent>
+                {accessories.map(a => (
+                  <SelectItem key={a.id} value={a.id}>{a.name} (Stock: {a.stock})</SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
