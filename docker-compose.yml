@@ -34,6 +34,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 50s
     networks:
       - dealer-network
 
@@ -46,16 +47,16 @@ services:
     ports:
       - "3000:3000"
     env_file: .env
-    # depends_on:
-    #   - new-car-sales-service
-    #   - accessories-suppliers-service
-    #   - inventory-service
-    #   - used-car-sales-service
-    #   - staff-service
-    #   - client-service
-    #   - notification-service
-    #    - maintenance-service
-    #   - financing-service
+    depends_on:
+      - new-car-sales-service
+      - accessories-suppliers-service
+      - inventory-service
+      - used-car-sales-service
+      - staff-service
+      - client-service
+      - notification-service
+      - maintenance-service
+    #      - financing-service
     networks:
       - dealer-network
 
@@ -66,6 +67,8 @@ services:
       dockerfile: InventoryService/Dockerfile
     ports:
       - "5001:5001"
+    expose:
+      - "5101"
     environment:
       - ASPNETCORE_URLS=http://+:5001
     env_file: .env
@@ -113,7 +116,6 @@ services:
     networks:
       - dealer-network
 
-  # dotnet
   new-car-sales-service:
     image: new-car-sales-service
     build:
@@ -132,7 +134,6 @@ services:
     networks:
       - dealer-network
 
-  # node
   used-car-sales-service:
     image: used-car-sales-service
     build:
@@ -151,26 +152,24 @@ services:
     networks:
       - dealer-network
 
-  # dotnet
-  # financing-service:
-  #   image: financing-service
-  #   build:
-  #     context: .
-  #     dockerfile: FinancingService/Dockerfile
-  #   ports:
-  #     - "5006:5006"
-  #   environment:
-  #     - ASPNETCORE_URLS=http://+:5006
-  #   env_file: .env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     rabbitmq-service:
-  #       condition: service_healthy
-  #   networks:
-  #     - dealer-network
+  financing-service:
+    image: financing-service
+    build:
+      context: .
+      dockerfile: FinancingService/Dockerfile
+    ports:
+      - "5006:5006"
+    environment:
+      - ASPNETCORE_URLS=http://+:5006
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
 
-  # node
   accessories-suppliers-service:
     image: accessories-suppliers-service
     build:
@@ -189,26 +188,24 @@ services:
     networks:
       - dealer-network
 
-  # dotnet
-  # maintenance-service:
-  #   image: maintenance-service
-  #   build:
-  #     context: .
-  #     dockerfile: MaintenanceService/Dockerfile
-  #   ports:
-  #     - "5008:5008"
-  #   environment:
-  #     - ASPNETCORE_URLS=http://+:5008
-  #   env_file: .env
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     rabbitmq-service:
-  #       condition: service_healthy
-  #   networks:
-  #     - dealer-network
+  maintenance-service:
+    image: maintenance-service
+    build:
+      context: .
+      dockerfile: MaintenanceService/Dockerfile
+    ports:
+      - "5008:5008"
+    env_file: .env
+    environment:
+      - ASPNETCORE_URLS=http://+:5008
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq-service:
+        condition: service_healthy
+    networks:
+      - dealer-network
 
-  # node
   notification-service:
     image: notification-service
     build:
