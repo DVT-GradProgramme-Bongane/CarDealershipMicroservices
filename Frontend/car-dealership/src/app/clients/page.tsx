@@ -1,6 +1,7 @@
 "use client";
 
 import AddClientModal from "@/components/client/add-new-client";
+import ClientDetailsSheet from "@/components/client/details-drawer";
 import { Client, fetchClients } from "@/lib/api/client";
 import { useState, useEffect } from "react";
 
@@ -9,6 +10,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const fetchData = () => {
     fetchClients()
@@ -95,7 +97,10 @@ export default function Page() {
                       {client.id}
                     </td>
                     <td className="p-2 align-middle">
-                      <button className="border bg-background hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-sm">
+                      <button
+                        onClick={() => setSelectedClient(client)}
+                        className="border bg-background hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-sm"
+                      >
                         View Details
                       </button>
                     </td>
@@ -115,11 +120,23 @@ export default function Page() {
           </table>
         </div>
       </div>
+      
       {showModal && (
         <AddClientModal
           onClose={() => setShowModal(false)}
           onSuccess={() => {
             setShowModal(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {selectedClient && (
+        <ClientDetailsSheet
+          client={selectedClient}
+          onClose={() => setSelectedClient(null)}
+          onSuccess={() => {
+            setSelectedClient(null);
             fetchData();
           }}
         />
