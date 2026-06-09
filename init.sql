@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS new_sales.transactions (
     car_id      UUID REFERENCES inventory.cars(id),
     client_id   UUID REFERENCES clients.customers(id),
     staff_id    UUID REFERENCES staff.employees(id),
-    sale_price  DECIMAL(12,2),
+    sales_price  DECIMAL(12,2),
     status      VARCHAR CHECK (status IN ('pending', 'completed', 'cancelled')) DEFAULT 'pending',
     created_at  TIMESTAMP NOT NULL DEFAULT now()
     );
@@ -199,7 +199,7 @@ INSERT INTO inventory.cars (id, vin, make, model, year, color, price, mileage, t
     ON CONFLICT (id) DO NOTHING;
 
 -- ---------- new_sales.transactions ----------
-INSERT INTO new_sales.transactions (id, car_id, client_id, staff_id, sale_price, status) VALUES
+INSERT INTO new_sales.transactions (id, car_id, client_id, staff_id, sales_price, status) VALUES
     ('e1111111-1111-1111-1111-111111111111',
      'd1111111-1111-1111-1111-111111111111',
      'c1111111-1111-1111-1111-111111111111',
