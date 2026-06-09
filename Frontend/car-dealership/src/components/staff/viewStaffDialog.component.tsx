@@ -70,7 +70,6 @@ export default function ViewStaffDialog({ staffMemberId,
                 <div>
                      <div className="flex flex-col gap-6 py-4">
 
-                        {/* Avatar + name + role badge */}
                         <div className="flex items-center gap-4">
                             <div className="flex size-14 items-center justify-center rounded-full bg-muted text-lg font-semibold uppercase">
                                 {staffData.firstName[0]}{staffData.lastName[0]}
@@ -85,7 +84,6 @@ export default function ViewStaffDialog({ staffMemberId,
                             </div>
                         </div>
 
-                        {/* Contact details */}
                         <div className="flex flex-col gap-3 text-sm">
                             <div className="flex items-center gap-3 text-muted-foreground">
                                 <MailIcon className="size-4 shrink-0" />

@@ -79,7 +79,7 @@ export default function Page() {
 
 
     return (
-        <div>
+        <>
             <DealershipHeader
                 title="Staff"
                 description="Manage dealership employees and roles"
@@ -102,6 +102,6 @@ export default function Page() {
             />
 
             <StaffTable staffData={filterStaff} loading={loading}/>
-        </div>
+        </>
     )
 }
